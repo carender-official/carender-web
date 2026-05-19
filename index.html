@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>캐린더 — 내 최애가 직접 챙겨주는 일정</title>
+  <meta name="description" content="캐린더는 내 최애 캐릭터가 직접 일정을 챙겨주는 Windows 데스크톱 캘린더 앱입니다." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['"Noto Sans KR"', 'system-ui', 'sans-serif'] },
+          colors: {
+            brand: {
+              50:  '#f0f4ff',
+              100: '#e0eaff',
+              200: '#c7d7fe',
+              300: '#a5bafc',
+              400: '#8196f8',
+              500: '#6373f1',
+              600: '#4f57e5',
+              700: '#4145ca',
+              800: '#363aa3',
+              900: '#303681',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    html { scroll-behavior: smooth; }
+    .glass {
+      background: rgba(255,255,255,0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .gradient-bg {
+      background: linear-gradient(135deg, #f0f4ff 0%, #e8ecff 40%, #f5f0ff 100%);
+    }
+    .screenshot-shadow {
+      box-shadow: 0 32px 64px -12px rgba(99,115,241,0.25), 0 0 0 1px rgba(99,115,241,0.08);
+    }
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px -8px rgba(99,115,241,0.2);
+    }
+    .feature-card { transition: all 0.3s ease; }
+    @keyframes float {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-10px); }
+    }
+    .float-anim { animation: float 4s ease-in-out infinite; }
+  </style>
+</head>
+<body class="font-sans antialiased text-slate-800">
+
+  <!-- ===== NAV ===== -->
+  <nav class="fixed top-0 left-0 right-0 z-50 glass border-b border-white/60">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="text-2xl font-bold text-brand-600 tracking-tight">캐린더</span>
+        <span class="hidden sm:inline text-xs text-slate-400 font-medium bg-brand-50 px-2 py-0.5 rounded-full border border-brand-100">v1.0</span>
+      </div>
+      <a href="#download"
+         class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-5 py-2 rounded-full transition-colors shadow-sm">
+        다운로드
+      </a>
+    </div>
+  </nav>
+
+  <!-- ===== HERO ===== -->
+  <section class="gradient-bg pt-32 pb-20 px-6">
+    <div class="max-w-4xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 bg-white/80 border border-brand-100 text-brand-600 text-xs font-semibold px-4 py-1.5 rounded-full mb-6 shadow-sm">
+        <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+        Windows 무료 다운로드
+      </div>
+      <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold text-slate-900 leading-tight mb-5">
+        내 최애가 직접<br />챙겨주는 일정
+      </h1>
+      <p class="text-lg sm:text-xl text-slate-500 max-w-xl mx-auto mb-10 leading-relaxed">
+        캐린더는 내가 좋아하는 캐릭터가 알림을 보내주는<br class="hidden sm:block" />
+        Windows 전용 데스크톱 캘린더 앱입니다.
+      </p>
+
+      <!-- Download button -->
+      <div id="download" class="flex flex-col items-center gap-3">
+        <a href="https://github.com/carender-official/carender/releases/download/v1.0.0/Setup.0.1.0.exe"
+           class="inline-flex items-center gap-3 bg-brand-600 hover:bg-brand-700 text-white font-bold text-lg px-10 py-4 rounded-2xl transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5">
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M13 5v8.586l3.293-3.293 1.414 1.414L12 17.414l-5.707-5.707 1.414-1.414L11 13.586V5h2zm-7 14h12v-2H6v2z"/>
+          </svg>
+          무료로 다운로드
+        </a>
+        <p class="text-sm text-slate-400">Windows 10/11 전용 &nbsp;·&nbsp; 약 75 MB</p>
+      </div>
+    </div>
+
+    <!-- Hero screenshot -->
+    <div class="max-w-3xl mx-auto mt-16 float-anim">
+      <img src="images/main.png" alt="캐린더 메인 화면"
+           class="w-full rounded-2xl screenshot-shadow" loading="lazy" />
+    </div>
+  </section>
+
+  <!-- ===== SCREENSHOTS ===== -->
+  <section class="py-20 px-6 bg-white">
+    <div class="max-w-6xl mx-auto">
+      <h2 class="text-2xl sm:text-3xl font-bold text-center text-slate-800 mb-3">앱 미리보기</h2>
+      <p class="text-center text-slate-400 mb-12">실제 캐린더 화면을 확인해 보세요</p>
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="group">
+          <img src="images/main.png" alt="메인 화면"
+               class="w-full rounded-2xl screenshot-shadow group-hover:scale-[1.02] transition-transform duration-300" loading="lazy" />
+          <p class="text-center text-sm text-slate-500 mt-3 font-medium">메인 캘린더</p>
+        </div>
+        <div class="group">
+          <img src="images/widget.png" alt="위젯 + 윈도우 화면"
+               class="w-full rounded-2xl screenshot-shadow group-hover:scale-[1.02] transition-transform duration-300" loading="lazy" />
+          <p class="text-center text-sm text-slate-500 mt-3 font-medium">데스크톱 위젯</p>
+        </div>
+        <div class="group">
+          <img src="images/notify.png" alt="알림 + 윈도우 배경"
+               class="w-full rounded-2xl screenshot-shadow group-hover:scale-[1.02] transition-transform duration-300" loading="lazy" />
+          <p class="text-center text-sm text-slate-500 mt-3 font-medium">최애 알림</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FEATURES ===== -->
+  <section class="py-20 px-6 gradient-bg">
+    <div class="max-w-6xl mx-auto">
+      <h2 class="text-2xl sm:text-3xl font-bold text-center text-slate-800 mb-3">주요 기능</h2>
+      <p class="text-center text-slate-400 mb-12">일정 관리가 이렇게 설레도 될까요?</p>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+
+        <div class="feature-card bg-white rounded-2xl p-6 shadow-sm border border-brand-50">
+          <div class="w-12 h-12 bg-brand-50 rounded-xl flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+            </svg>
+          </div>
+          <h3 class="font-bold text-slate-800 mb-2">최애가 챙겨주는 알림</h3>
+          <p class="text-sm text-slate-500 leading-relaxed">내가 좋아하는 캐릭터를 직접 업로드하면 일정 알림에 함께 표시됩니다. SVG는 모든 플랜에서, 움직이는 GIF 캐릭터는 프리미엄에서 사용할 수 있어요.</p>
+        </div>
+
+        <div class="feature-card bg-white rounded-2xl p-6 shadow-sm border border-brand-50">
+          <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2h-2"/>
+            </svg>
+          </div>
+          <h3 class="font-bold text-slate-800 mb-2">데스크톱 위젯</h3>
+          <p class="text-sm text-slate-500 leading-relaxed">오늘의 일정을 바탕화면 위젯으로 한눈에. 직접 등록한 캐릭터가 위젯에서 일정과 함께 표시돼요.</p>
+        </div>
+
+        <div class="feature-card bg-white rounded-2xl p-6 shadow-sm border border-brand-50">
+          <div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+            </svg>
+          </div>
+          <h3 class="font-bold text-slate-800 mb-2">일정 공유 페이지</h3>
+          <p class="text-sm text-slate-500 leading-relaxed">링크 하나로 일정을 공유하세요. 로그인 없이도 확인할 수 있는 공유 페이지를 자동 생성합니다.</p>
+        </div>
+
+        <div class="feature-card bg-white rounded-2xl p-6 shadow-sm border border-brand-50">
+          <div class="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+          </div>
+          <h3 class="font-bold text-slate-800 mb-2">직관적인 일정 관리</h3>
+          <p class="text-sm text-slate-500 leading-relaxed">프로젝트별로 일정을 분류하고, 캘린더 뷰로 한눈에 확인하세요. 첨부파일과 링크도 함께 관리할 수 있어요.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PLANS ===== -->
+  <section class="py-20 px-6 bg-white">
+    <div class="max-w-5xl mx-auto">
+      <h2 class="text-2xl sm:text-3xl font-bold text-center text-slate-800 mb-3">플랜 비교</h2>
+      <p class="text-center text-slate-400 mb-6">필요한 만큼 선택하세요</p>
+      <p class="text-center text-xs text-slate-400 bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-4 mb-10 max-w-lg mx-auto">모든 플랜에서 일정 관리 · 캐릭터 알림 · 데스크톱 위젯을 사용할 수 있어요</p>
+      <div class="grid md:grid-cols-3 gap-6 items-start">
+
+        <!-- 무료 -->
+        <div class="rounded-2xl border border-slate-200 p-7">
+          <p class="text-sm font-semibold text-slate-500 mb-1">무료</p>
+          <p class="text-3xl font-bold text-slate-900 mb-6">무료</p>
+          <ul class="space-y-3 text-sm text-slate-600 mb-0">
+            <li class="flex items-start gap-2"><span class="text-brand-400 mt-0.5">✓</span>월 일정 공유 15개</li>
+            <li class="flex items-start gap-2"><span class="text-brand-400 mt-0.5">✓</span>파일 공유 100 MB</li>
+            <li class="flex items-start gap-2"><span class="text-brand-400 mt-0.5">✓</span>공유 링크 유효기간 7일</li>
+          </ul>
+        </div>
+
+        <!-- 스탠다드 -->
+        <div class="rounded-2xl border border-slate-200 p-7">
+          <p class="text-sm font-semibold text-slate-500 mb-1">스탠다드</p>
+          <div class="flex items-baseline gap-1 mb-6">
+            <span class="text-3xl font-bold text-slate-900">₩1,900</span>
+            <span class="text-sm text-slate-400">/ 월</span>
+          </div>
+          <ul class="space-y-3 text-sm text-slate-600">
+            <li class="flex items-start gap-2"><span class="text-brand-400 mt-0.5">✓</span>월 일정 공유 50개</li>
+            <li class="flex items-start gap-2"><span class="text-brand-400 mt-0.5">✓</span>파일 공유 500 MB</li>
+            <li class="flex items-start gap-2"><span class="text-brand-400 mt-0.5">✓</span>공유 링크 유효기간 14일</li>
+            <li class="flex items-start gap-2"><span class="text-brand-400 mt-0.5">✓</span>공유받은 링크에서 첨부파일 다운로드</li>
+          </ul>
+        </div>
+
+        <!-- 프리미엄 (추천) -->
+        <div class="rounded-2xl border-2 border-brand-500 p-7 relative shadow-lg shadow-brand-100">
+          <div class="absolute -top-3.5 left-1/2 -translate-x-1/2">
+            <span class="bg-brand-600 text-white text-xs font-bold px-4 py-1 rounded-full">추천</span>
+          </div>
+          <p class="text-sm font-semibold text-brand-600 mb-1">프리미엄</p>
+          <div class="flex items-baseline gap-1 mb-6">
+            <span class="text-3xl font-bold text-slate-900">₩2,900</span>
+            <span class="text-sm text-slate-400">/ 월</span>
+          </div>
+          <ul class="space-y-3 text-sm text-slate-600">
+            <li class="flex items-start gap-2"><span class="text-brand-500 mt-0.5 font-bold">✓</span>월 일정 공유 무제한</li>
+            <li class="flex items-start gap-2"><span class="text-brand-500 mt-0.5 font-bold">✓</span>파일 공유 2 GB</li>
+            <li class="flex items-start gap-2"><span class="text-brand-500 mt-0.5 font-bold">✓</span>공유 링크 유효기간 30일</li>
+            <li class="flex items-start gap-2"><span class="text-brand-500 mt-0.5 font-bold">✓</span>공유받은 링크에서 첨부파일 다운로드</li>
+            <li class="flex items-start gap-2"><span class="text-brand-500 mt-0.5 font-bold">✓</span>말풍선 디자인 커스텀</li>
+            <li class="flex items-start gap-2"><span class="text-brand-500 mt-0.5 font-bold">✓</span>SVG 캐릭터 라이브러리</li>
+            <li class="flex items-start gap-2"><span class="text-brand-500 mt-0.5 font-bold">✓</span>알림 아이콘 크기 조절</li>
+          </ul>
+        </div>
+
+      </div>
+      <p class="text-center text-xs text-slate-400 mt-8">가입 후 7일간 프리미엄 무료 체험이 제공됩니다. 체험 기간 중 모든 기능을 사용할 수 있어요.</p>
+    </div>
+  </section>
+
+  <!-- ===== INSTALL GUIDE ===== -->
+  <section class="py-20 px-6 bg-white">
+    <div class="max-w-2xl mx-auto">
+      <h2 class="text-2xl sm:text-3xl font-bold text-center text-slate-800 mb-3">설치 방법</h2>
+      <p class="text-center text-slate-400 mb-12">간단한 두 단계로 시작하세요</p>
+
+      <div class="space-y-4">
+        <div class="flex gap-4 p-5 bg-amber-50 border border-amber-100 rounded-2xl">
+          <div class="shrink-0 w-9 h-9 bg-amber-100 text-amber-700 rounded-full flex items-center justify-center font-bold text-sm">1</div>
+          <div>
+            <h3 class="font-semibold text-slate-800 mb-1">Windows 보안 경고 무시하기</h3>
+            <p class="text-sm text-slate-600 leading-relaxed">
+              설치 파일 실행 시 <strong>"Windows의 PC 보호"</strong> 경고가 뜰 수 있어요.<br />
+              <strong>"추가 정보"</strong>를 클릭한 뒤 <strong>"실행"</strong>을 누르면 설치가 진행됩니다.<br />
+              <span class="text-amber-700 text-xs mt-1 block">· 캐린더는 코드 서명 인증을 준비 중입니다. 안전한 앱이니 안심하고 설치해 주세요.</span>
+            </p>
+          </div>
+        </div>
+
+        <div class="flex gap-4 p-5 bg-brand-50 border border-brand-100 rounded-2xl">
+          <div class="shrink-0 w-9 h-9 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center font-bold text-sm">2</div>
+          <div>
+            <h3 class="font-semibold text-slate-800 mb-1">Google 계정으로 로그인</h3>
+            <p class="text-sm text-slate-600 leading-relaxed">
+              앱 실행 후 <strong>Google 계정</strong>으로 1초 만에 로그인하세요.<br />
+              별도 회원가입 없이 구글 계정만 있으면 바로 시작할 수 있습니다.
+            </p>
+          </div>
+        </div>
+
+        <div class="flex gap-4 p-5 bg-emerald-50 border border-emerald-100 rounded-2xl">
+          <div class="shrink-0 w-9 h-9 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center font-bold text-sm">3</div>
+          <div>
+            <h3 class="font-semibold text-slate-800 mb-1">7일 무료 체험 시작!</h3>
+            <p class="text-sm text-slate-600 leading-relaxed">
+              가입 즉시 <strong>7일 프리미엄 무료 체험</strong>이 시작됩니다.<br />
+              위젯, 최애 알림 등 모든 기능을 마음껏 사용해 보세요.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-10 text-center">
+        <a href="https://github.com/carender-official/carender/releases/download/v1.0.0/Setup.0.1.0.exe"
+           class="inline-flex items-center gap-3 bg-brand-600 hover:bg-brand-700 text-white font-bold text-lg px-10 py-4 rounded-2xl transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5">
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M13 5v8.586l3.293-3.293 1.414 1.414L12 17.414l-5.707-5.707 1.414-1.414L11 13.586V5h2zm-7 14h12v-2H6v2z"/>
+          </svg>
+          캐린더 다운로드
+        </a>
+        <p class="text-sm text-slate-400 mt-3">Windows 10/11 전용 &nbsp;·&nbsp; 약 75 MB &nbsp;·&nbsp; 무료</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="bg-slate-900 text-slate-400 py-12 px-6">
+    <div class="max-w-4xl mx-auto text-center">
+      <p class="text-white font-bold text-xl mb-1">캐린더</p>
+      <p class="text-sm mb-6">내 최애가 직접 챙겨주는 일정</p>
+      <div class="flex justify-center gap-6 text-sm mb-6">
+        <a href="terms.html" class="hover:text-white transition-colors">이용약관</a>
+        <a href="privacy.html" class="hover:text-white transition-colors">개인정보처리방침</a>
+        <a href="mailto:carender.official@gmail.com" class="hover:text-white transition-colors">문의하기</a>
+      </div>
+      <p class="text-xs text-slate-500">
+        문의: carender.official@gmail.com<br />
+        사업자 정보는 출시 후 업데이트 예정입니다.<br /><br />
+        &copy; 2026 캐린더. All rights reserved.
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>

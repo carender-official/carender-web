@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>이용약관 — 캐린더</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: { extend: { fontFamily: { sans: ['"Noto Sans KR"', 'system-ui', 'sans-serif'] } } }
+    }
+  </script>
+</head>
+<body class="font-sans antialiased bg-slate-50 text-slate-800">
+
+  <header class="bg-white border-b border-slate-100 sticky top-0 z-10">
+    <div class="max-w-3xl mx-auto px-6 py-4 flex items-center gap-4">
+      <a href="index.html" class="text-slate-400 hover:text-slate-600 transition-colors flex items-center gap-2 text-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        메인으로
+      </a>
+      <span class="text-slate-300">|</span>
+      <span class="font-semibold text-slate-700">캐린더</span>
+    </div>
+  </header>
+
+  <main class="max-w-3xl mx-auto px-6 py-12">
+    <h1 class="text-2xl font-bold text-slate-900 mb-2">서비스 이용약관</h1>
+    <p class="text-sm text-slate-400 mb-10">시행일: 2026년 4월 22일</p>
+
+    <div class="prose prose-slate max-w-none space-y-8 text-sm leading-relaxed">
+
+      <section>
+        <h2 class="text-base font-bold text-slate-800 mb-3">제1조 (목적)</h2>
+        <p class="text-slate-600">본 약관은 캐린더(이하 "서비스")의 이용 조건 및 절차에 관한 사항을 규정함을 목적으로 합니다.</p>
+      </section>
+
+      <section>
+        <h2 class="text-base font-bold text-slate-800 mb-3">제2조 (서비스 내용)</h2>
+        <p class="text-slate-600">서비스는 Windows 환경에서 동작하는 데스크톱 캘린더 애플리케이션으로, 다음 기능을 제공합니다.</p>
+        <ul class="list-disc list-inside text-slate-600 mt-2 space-y-1">
+          <li>일정·프로젝트 관리</li>
+          <li>데스크톱 위젯 (Pro 플랜)</li>
+          <li>캐릭터 알림 (Pro 플랜)</li>
+          <li>일정 공유 페이지 생성</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-base font-bold text-slate-800 mb-3">제3조 (이용 자격)</h2>
+        <p class="text-slate-600">서비스는 만 14세 이상인 자에 한하여 이용할 수 있습니다. 만 14세 미만인 경우 서비스 이용이 제한됩니다.</p>
+      </section>
+
+      <section>
+        <h2 class="text-base font-bold text-slate-800 mb-3">제4조 (플랜 및 요금)</h2>
+        <p class="text-slate-600">서비스는 무료·스탠다드·프리미엄·팀의 4단계 플랜을 제공합니다. 신규 가입 시 Pro 플랜 7일 무료 체험이 자동 적용됩니다. 유료 플랜의 구체적인 요금과 기능은 앱 내 설정 화면에서 확인할 수 있습니다.</p>
+      </section>
+
+      <section>
+        <h2 class="text-base font-bold text-slate-800 mb-3">제5조 (일정 및 파일 공유 관련 면책 조항)</h2>
+        <ul class="list-disc list-inside text-slate-600 space-y-1">
+          <li>사용자가 생성한 공유 링크를 통해 노출되는 일정 정보, 첨부 파일 등 모든 콘텐츠에 대한 책임은 공유를 생성한 사용자에게 있습니다.</li>
+          <li>링크 노출, 파일 유출 등 공유로 인해 발생하는 문제에 대해 서비스 운영자는 책임을 지지 않습니다.</li>
+          <li>공유 링크는 생성일로부터 30일간 유효하며 이후 자동 만료됩니다.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-base font-bold text-slate-800 mb-3">제6조 (리소스 저작권 고지)</h2>
+        <ul class="list-disc list-inside text-slate-600 space-y-1">
+          <li>본 앱에서 사용된 SVG 및 이미지 리소스는 해당 저작권자의 라이선스 조건에 따라 사용됩니다.</li>
+          <li>앱 내 캐릭터 이미지 등의 저작권은 원 저작권자에게 있으며 무단 복제 및 배포를 금합니다.</li>
+          <li>Google OAuth를 통해 수집된 정보는 Google의 개인정보처리방침(<a href="https://policies.google.com/privacy" target="_blank" class="text-indigo-600 hover:underline">https://policies.google.com/privacy</a>)을 따릅니다.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-base font-bold text-slate-800 mb-3">제7조 (서비스 변경 및 종료)</h2>
+        <p class="text-slate-600">서비스 운영자는 서비스 내용 변경 또는 종료 시 최소 30일 전에 앱 내 공지 또는 이메일로 사전 안내합니다.</p>
+      </section>
+
+      <section>
+        <h2 class="text-base font-bold text-slate-800 mb-3">제8조 (약관 변경)</h2>
+        <p class="text-slate-600">본 약관은 법령·정책 변경에 따라 수정될 수 있으며, 변경 시 앱 내 공지를 통해 안내합니다.</p>
+      </section>
+
+      <section class="bg-slate-100 rounded-xl p-5">
+        <h2 class="text-base font-bold text-slate-800 mb-2">문의</h2>
+        <p class="text-slate-600">이용약관에 관한 문의는 아래 이메일로 연락해 주세요.</p>
+        <a href="mailto:carender.official@gmail.com" class="text-indigo-600 hover:underline">carender.official@gmail.com</a>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="bg-slate-900 text-slate-500 py-8 px-6 text-center text-xs mt-16">
+    <p>&copy; 2026 캐린더. All rights reserved.</p>
+  </footer>
+
+</body>
+</html>
