@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>구독 결제 — 캐린더</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
+  <style>
+    body { font-family: 'Noto Sans KR', sans-serif; }
+    .gradient-bg { background: linear-gradient(135deg, #f0f4ff 0%, #e8ecff 40%, #f5f0ff 100%); }
+  </style>
+</head>
+<body class="gradient-bg min-h-screen flex items-center justify-center px-4">
+
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 max-w-sm w-full text-center">
+    <div id="loading">
+      <div class="w-12 h-12 border-4 border-indigo-200 border-t-indigo-500 rounded-full animate-spin mx-auto mb-4"></div>
+      <p class="text-slate-700 font-medium text-lg">결제창을 불러오는 중...</p>
+      <p class="text-slate-400 text-sm mt-2">잠시만 기다려 주세요.</p>
+    </div>
+    <div id="error" class="hidden">
+      <p class="text-red-500 font-medium text-lg mb-2">오류가 발생했습니다.</p>
+      <p id="error-msg" class="text-slate-500 text-sm"></p>
+    </div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search)
+    const customerUid = params.get('customer_uid')
+
+    function showError(msg) {
+      document.getElementById('loading').classList.add('hidden')
+      document.getElementById('error').classList.remove('hidden')
+      document.getElementById('error-msg').textContent = msg
+    }
+
+    if (!customerUid) {
+      showError('잘못된 접근입니다. 캐린더 앱에서 다시 시도해 주세요.')
+    } else {
+      IMP.init('imp12333754')
+
+      IMP.request_pay({
+        pg:           'kcp_billing',
+        pay_method:   'card',
+        merchant_uid: 'order_' + Date.now(),
+        name:         '캐린더 Pro 월 구독',
+        amount:       0,
+        customer_uid: customerUid,
+        m_redirect_url: 'https://carender.kr/pay/done?customer_uid=' + encodeURIComponent(customerUid),
+      })
+    }
+  </script>
+</body>
+</html>
