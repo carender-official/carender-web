@@ -14,14 +14,109 @@
 <body class="gradient-bg min-h-screen flex items-center justify-center px-4">
 
   <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 max-w-sm w-full text-center">
-    <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
-      <svg class="w-8 h-8 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
-      </svg>
+
+    <!-- 성공 -->
+    <div id="view-success" class="hidden">
+      <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg class="w-8 h-8 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+        </svg>
+      </div>
+      <h2 class="text-xl font-bold text-slate-800 mb-3">결제가 처리되었어요.</h2>
+      <p class="text-slate-500 text-sm">캐린더 앱으로 돌아가 주세요.</p>
     </div>
-    <h2 class="text-xl font-bold text-slate-800 mb-3">결제가 처리되었어요.</h2>
-    <p class="text-slate-500 text-sm">캐린더 앱으로 돌아가 주세요.</p>
+
+    <!-- 취소 / 실패 -->
+    <div id="view-cancel" class="hidden">
+      <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </div>
+      <h2 class="text-xl font-bold text-slate-700 mb-2">결제가 취소되었거나<br/>완료되지 못했어요.</h2>
+      <p id="cancel-error-msg" class="text-slate-400 text-xs mb-5 hidden"></p>
+      <div class="flex flex-col gap-2">
+        <button id="btn-retry"
+          class="w-full text-sm font-medium py-2.5 rounded-xl bg-indigo-500 text-white hover:bg-indigo-600 active:bg-indigo-700 transition-colors">
+          다시 시도
+        </button>
+        <button id="btn-close"
+          class="w-full text-sm font-medium py-2.5 rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 active:bg-slate-300 transition-colors">
+          닫기
+        </button>
+      </div>
+    </div>
+
+    <!-- 결과 불명 (파라미터 없음 → 타임아웃) -->
+    <div id="view-unknown" class="hidden">
+      <div class="w-16 h-16 bg-yellow-50 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg class="w-8 h-8 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        </svg>
+      </div>
+      <h2 class="text-xl font-bold text-slate-700 mb-2">결과를 확인할 수 없어요.</h2>
+      <p class="text-slate-400 text-sm mb-5">다시 시도해 주세요.</p>
+      <div class="flex flex-col gap-2">
+        <button id="btn-retry-unknown"
+          class="w-full text-sm font-medium py-2.5 rounded-xl bg-indigo-500 text-white hover:bg-indigo-600 active:bg-indigo-700 transition-colors">
+          다시 시도
+        </button>
+        <button id="btn-close-unknown"
+          class="w-full text-sm font-medium py-2.5 rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 active:bg-slate-300 transition-colors">
+          닫기
+        </button>
+      </div>
+    </div>
+
+    <!-- 대기 (파라미터 없을 때 타임아웃 전) -->
+    <div id="view-waiting">
+      <div class="w-12 h-12 border-4 border-indigo-200 border-t-indigo-500 rounded-full animate-spin mx-auto mb-4"></div>
+      <p class="text-slate-500 text-sm">결과 확인 중...</p>
+    </div>
+
   </div>
 
+  <script>
+    const params      = new URLSearchParams(window.location.search)
+    const impSuccess  = params.get('imp_success')
+    const errorMsg    = params.get('error_msg') || ''
+    const customerUid = params.get('customer_uid') || ''
+
+    function show(id) {
+      ['view-success', 'view-cancel', 'view-unknown', 'view-waiting'].forEach(v => {
+        document.getElementById(v).classList.toggle('hidden', v !== id)
+      })
+    }
+
+    function retryUrl() {
+      if (customerUid) return '/pay?customer_uid=' + encodeURIComponent(customerUid)
+      return '/pay'
+    }
+
+    // 다시 시도 / 닫기 버튼 공통 바인딩
+    document.getElementById('btn-retry').onclick        = () => { window.location.href = retryUrl() }
+    document.getElementById('btn-close').onclick        = () => { window.close() }
+    document.getElementById('btn-retry-unknown').onclick = () => { window.location.href = retryUrl() }
+    document.getElementById('btn-close-unknown').onclick = () => { window.close() }
+
+    if (impSuccess === 'true') {
+      // ── 성공: 기존 흐름 그대로 ──────────────────────────────────
+      show('view-success')
+
+    } else if (impSuccess === 'false') {
+      // ── 실패 / 취소 ────────────────────────────────────────────
+      show('view-cancel')
+      if (errorMsg) {
+        const el = document.getElementById('cancel-error-msg')
+        el.textContent = errorMsg
+        el.classList.remove('hidden')
+      }
+
+    } else {
+      // ── 파라미터 없음: 10초 대기 후 결과 불명 안내 ─────────────
+      show('view-waiting')
+      setTimeout(() => show('view-unknown'), 10000)
+    }
+  </script>
 </body>
 </html>
