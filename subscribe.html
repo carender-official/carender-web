@@ -58,23 +58,23 @@
   <main class="max-w-lg mx-auto px-6 py-16">
 
     <div class="text-center mb-10">
-      <span class="inline-block bg-brand-100 text-brand-700 text-xs font-semibold px-3 py-1 rounded-full mb-4">Pro 구독</span>
-      <h1 class="text-3xl font-bold text-slate-800 mb-3">캐린더 Pro</h1>
+      <span class="inline-block bg-brand-100 text-brand-700 text-xs font-semibold px-3 py-1 rounded-full mb-4">구독 플랜</span>
+      <h1 class="text-3xl font-bold text-slate-800 mb-3">캐린더 구독</h1>
       <p class="text-slate-500 text-sm leading-relaxed">
         월 구독을 시작하려면 카드를 등록해 주세요.<br/>
         빌링키 발급만 진행되며 즉시 결제는 발생하지 않습니다.
       </p>
     </div>
 
-    <!-- 플랜 카드 -->
-    <div class="bg-white rounded-2xl shadow-sm border border-brand-100 p-6 mb-6">
+    <!-- 스탠다드 플랜 카드 -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-4">
       <div class="flex items-center justify-between mb-4">
         <div>
-          <div class="font-semibold text-slate-800">월간 구독</div>
+          <div class="font-semibold text-slate-800">스탠다드</div>
           <div class="text-sm text-slate-400 mt-0.5">매월 자동 결제</div>
         </div>
         <div class="text-right">
-          <div class="text-2xl font-bold text-brand-600">₩9,900</div>
+          <div class="text-2xl font-bold text-slate-700">₩1,900</div>
           <div class="text-xs text-slate-400">/ 월</div>
         </div>
       </div>
@@ -83,34 +83,80 @@
           <svg class="w-4 h-4 text-brand-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
           </svg>
-          최애 캐릭터 무제한 사용
+          월 공유 50개
         </li>
         <li class="flex items-center gap-2">
           <svg class="w-4 h-4 text-brand-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
           </svg>
-          알림 커스터마이징
+          파일 공유 500MB
         </li>
         <li class="flex items-center gap-2">
           <svg class="w-4 h-4 text-brand-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
           </svg>
-          우선 고객 지원
+          링크 유효기간 14일
         </li>
       </ul>
+      <button
+        onclick="requestBilling('standard')"
+        class="w-full mt-5 bg-slate-700 hover:bg-slate-800 active:bg-slate-900 text-white font-semibold py-3 rounded-xl transition-colors text-sm flex items-center justify-center gap-2"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+        </svg>
+        스탠다드 구독 시작하기 (₩1,900/월)
+      </button>
     </div>
 
-    <!-- 결제 버튼 -->
-    <button
-      id="subscribe-btn"
-      onclick="requestBilling()"
-      class="w-full bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-semibold py-4 rounded-xl transition-colors text-base shadow-lg shadow-brand-200 flex items-center justify-center gap-2"
-    >
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
-      </svg>
-      월 구독 시작하기 (카드 등록)
-    </button>
+    <!-- 프리미엄 플랜 카드 -->
+    <div class="bg-white rounded-2xl shadow-sm border border-brand-100 p-6 mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <div class="font-semibold text-slate-800">프리미엄 <span class="text-xs font-medium bg-brand-100 text-brand-700 px-1.5 py-0.5 rounded-full ml-1">추천</span></div>
+          <div class="text-sm text-slate-400 mt-0.5">매월 자동 결제</div>
+        </div>
+        <div class="text-right">
+          <div class="text-2xl font-bold text-brand-600">₩2,900</div>
+          <div class="text-xs text-slate-400">/ 월</div>
+        </div>
+      </div>
+      <ul class="space-y-2 text-sm text-slate-600 border-t border-slate-100 pt-4">
+        <li class="flex items-center gap-2">
+          <svg class="w-4 h-4 text-brand-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          월 공유 무제한
+        </li>
+        <li class="flex items-center gap-2">
+          <svg class="w-4 h-4 text-brand-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          파일 공유 2GB
+        </li>
+        <li class="flex items-center gap-2">
+          <svg class="w-4 h-4 text-brand-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          링크 유효기간 30일
+        </li>
+        <li class="flex items-center gap-2">
+          <svg class="w-4 h-4 text-brand-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          말풍선 디자인 커스텀 · 아이콘 크기 조절
+        </li>
+      </ul>
+      <button
+        onclick="requestBilling('pro')"
+        class="w-full mt-5 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-semibold py-3 rounded-xl transition-colors text-sm shadow-lg shadow-brand-200 flex items-center justify-center gap-2"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+        </svg>
+        프리미엄 구독 시작하기 (₩2,900/월)
+      </button>
+    </div>
 
     <p class="text-center text-xs text-slate-400 mt-3">
       카드 정보는 포트원(KCP)이 안전하게 처리합니다. 언제든지 구독 취소 가능합니다.
@@ -125,10 +171,14 @@
     // 포트원 V1 초기화
     IMP.init("imp12333754");
 
-    function requestBilling() {
-      const btn = document.getElementById("subscribe-btn");
-      btn.disabled = true;
-      btn.textContent = "결제창 열리는 중...";
+    const PLAN_INFO = {
+      standard: { name: '캐린더 스탠다드 월 구독', amount: 1900 },
+      pro:      { name: '캐린더 프리미엄 월 구독', amount: 2900 },
+    };
+
+    function requestBilling(planKey) {
+      const plan = PLAN_INFO[planKey] || PLAN_INFO.pro;
+      document.querySelectorAll('button[onclick^="requestBilling"]').forEach(b => { b.disabled = true; });
 
       const merchantUid  = "order_" + Date.now();
       const customerUid  = "customer_" + Math.random().toString(36).slice(2, 10);
@@ -138,8 +188,8 @@
           channelKey:    "channel-key-87100556-5f16-4e9b-9d05-73c4642704f0",
           pay_method:    "card",
           merchant_uid:  merchantUid,
-          name:          "캐린더 Pro 월 구독",
-          amount:        0,
+          name:          plan.name,
+          amount:        plan.amount,
           customer_uid:  customerUid,
           m_redirect_url: "https://carender.kr/subscribe",
         },
@@ -154,12 +204,8 @@
             showResult("error", rsp.error_msg);
           }
 
-          // 버튼 원상 복구
-          btn.disabled = false;
-          btn.innerHTML =
-            '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
-            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>' +
-            "</svg> 월 구독 시작하기 (카드 등록)";
+          // 버튼들 다시 활성화 (결제창 닫힌 후)
+          document.querySelectorAll('button[onclick^="requestBilling"]').forEach(b => { b.disabled = false; });
         }
       );
     }

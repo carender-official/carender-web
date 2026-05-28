@@ -29,14 +29,15 @@
   <script>
     const params      = new URLSearchParams(window.location.search)
     const customerUid = params.get('customer_uid')
-    const tierCode    = params.get('tier_code') || 'premium'
+    const tierCode    = params.get('tier_code') || 'pro'
 
     // 티어별 결제 정보
     const TIER_INFO = {
       standard: { name: '캐린더 스탠다드 월 구독', amount: 1900 },
-      premium:  { name: '캐린더 프리미엄 월 구독', amount: 2900 },
+      pro:      { name: '캐린더 프리미엄 월 구독', amount: 2900 },
+      premium:  { name: '캐린더 프리미엄 월 구독', amount: 2900 }, // 구 키 호환
     }
-    const tier = TIER_INFO[tierCode] || TIER_INFO.premium
+    const tier = TIER_INFO[tierCode] || TIER_INFO.pro
 
     function showError(msg) {
       document.getElementById('loading').classList.add('hidden')
