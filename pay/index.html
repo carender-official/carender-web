@@ -27,8 +27,16 @@
   </div>
 
   <script>
-    const params = new URLSearchParams(window.location.search)
+    const params      = new URLSearchParams(window.location.search)
     const customerUid = params.get('customer_uid')
+    const tierCode    = params.get('tier_code') || 'premium'
+
+    // 티어별 결제 정보
+    const TIER_INFO = {
+      standard: { name: '캐린더 스탠다드 월 구독', amount: 1900 },
+      premium:  { name: '캐린더 프리미엄 월 구독', amount: 2900 },
+    }
+    const tier = TIER_INFO[tierCode] || TIER_INFO.premium
 
     function showError(msg) {
       document.getElementById('loading').classList.add('hidden')
@@ -41,12 +49,14 @@
     } else {
       IMP.init('imp12333754')
 
+      console.log('[포트원] 결제 요청 — tier_code:', tierCode, '/ amount:', tier.amount)
+
       IMP.request_pay({
         pg:           'kcp_billing',
         pay_method:   'card',
         merchant_uid: 'order_' + Date.now(),
-        name:         '캐린더 Pro 월 구독',
-        amount:       100,
+        name:         tier.name,
+        amount:       tier.amount,
         customer_uid: customerUid,
         m_redirect_url: 'https://carender.kr/pay/done?customer_uid=' + encodeURIComponent(customerUid),
       })

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>구독 결제 — 캐린더</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- 포트원 V1 SDK -->
+  <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['"Noto Sans KR"', 'system-ui', 'sans-serif'] },
+          colors: {
+            brand: {
+              50:  '#f0f4ff',
+              100: '#e0eaff',
+              200: '#c7d7fe',
+              300: '#a5bafc',
+              400: '#8196f8',
+              500: '#6373f1',
+              600: '#4f57e5',
+              700: '#4145ca',
+              800: '#363aa3',
+              900: '#303681',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .gradient-bg {
+      background: linear-gradient(135deg, #f0f4ff 0%, #e8ecff 40%, #f5f0ff 100%);
+    }
+  </style>
+</head>
+<body class="font-sans antialiased text-slate-800 gradient-bg min-h-screen">
+
+  <header class="bg-white/80 backdrop-blur border-b border-slate-100 sticky top-0 z-10">
+    <div class="max-w-3xl mx-auto px-6 py-4 flex items-center gap-4">
+      <a href="index.html" class="text-slate-400 hover:text-slate-600 transition-colors flex items-center gap-2 text-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        메인으로
+      </a>
+      <span class="text-slate-300">|</span>
+      <span class="font-semibold text-slate-700">캐린더</span>
+      <span class="ml-auto text-xs text-slate-400 bg-amber-50 border border-amber-200 text-amber-600 px-2 py-0.5 rounded-full font-medium">테스트 모드</span>
+    </div>
+  </header>
+
+  <main class="max-w-lg mx-auto px-6 py-16">
+
+    <div class="text-center mb-10">
+      <span class="inline-block bg-brand-100 text-brand-700 text-xs font-semibold px-3 py-1 rounded-full mb-4">Pro 구독</span>
+      <h1 class="text-3xl font-bold text-slate-800 mb-3">캐린더 Pro</h1>
+      <p class="text-slate-500 text-sm leading-relaxed">
+        월 구독을 시작하려면 카드를 등록해 주세요.<br/>
+        빌링키 발급만 진행되며 즉시 결제는 발생하지 않습니다.
+      </p>
+    </div>
+
+    <!-- 플랜 카드 -->
+    <div class="bg-white rounded-2xl shadow-sm border border-brand-100 p-6 mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <div class="font-semibold text-slate-800">월간 구독</div>
+          <div class="text-sm text-slate-400 mt-0.5">매월 자동 결제</div>
+        </div>
+        <div class="text-right">
+          <div class="text-2xl font-bold text-brand-600">₩9,900</div>
+          <div class="text-xs text-slate-400">/ 월</div>
+        </div>
+      </div>
+      <ul class="space-y-2 text-sm text-slate-600 border-t border-slate-100 pt-4">
+        <li class="flex items-center gap-2">
+          <svg class="w-4 h-4 text-brand-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          최애 캐릭터 무제한 사용
+        </li>
+        <li class="flex items-center gap-2">
+          <svg class="w-4 h-4 text-brand-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          알림 커스터마이징
+        </li>
+        <li class="flex items-center gap-2">
+          <svg class="w-4 h-4 text-brand-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          우선 고객 지원
+        </li>
+      </ul>
+    </div>
+
+    <!-- 결제 버튼 -->
+    <button
+      id="subscribe-btn"
+      onclick="requestBilling()"
+      class="w-full bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-semibold py-4 rounded-xl transition-colors text-base shadow-lg shadow-brand-200 flex items-center justify-center gap-2"
+    >
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+      </svg>
+      월 구독 시작하기 (카드 등록)
+    </button>
+
+    <p class="text-center text-xs text-slate-400 mt-3">
+      카드 정보는 포트원(KCP)이 안전하게 처리합니다. 언제든지 구독 취소 가능합니다.
+    </p>
+
+    <!-- 결과 영역 -->
+    <div id="result-box" class="hidden mt-6 rounded-xl p-5 text-sm leading-relaxed"></div>
+
+  </main>
+
+  <script>
+    // 포트원 V1 초기화
+    IMP.init("imp12333754");
+
+    function requestBilling() {
+      const btn = document.getElementById("subscribe-btn");
+      btn.disabled = true;
+      btn.textContent = "결제창 열리는 중...";
+
+      const merchantUid  = "order_" + Date.now();
+      const customerUid  = "customer_" + Math.random().toString(36).slice(2, 10);
+
+      IMP.request_pay(
+        {
+          channelKey:    "channel-key-87100556-5f16-4e9b-9d05-73c4642704f0",
+          pay_method:    "card",
+          merchant_uid:  merchantUid,
+          name:          "캐린더 Pro 월 구독",
+          amount:        0,
+          customer_uid:  customerUid,
+          m_redirect_url: "https://carender.kr/subscribe",
+        },
+        function (rsp) {
+          console.log("[포트원 콜백]", rsp);
+
+          if (rsp.success) {
+            console.log("빌링키 발급 성공 — customer_uid:", customerUid);
+            showResult("success", customerUid);
+          } else {
+            console.warn("빌링키 발급 실패 —", rsp.error_msg);
+            showResult("error", rsp.error_msg);
+          }
+
+          // 버튼 원상 복구
+          btn.disabled = false;
+          btn.innerHTML =
+            '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>' +
+            "</svg> 월 구독 시작하기 (카드 등록)";
+        }
+      );
+    }
+
+    function showResult(type, detail) {
+      const box = document.getElementById("result-box");
+      box.classList.remove("hidden");
+
+      if (type === "success") {
+        box.className =
+          "mt-6 rounded-xl p-5 text-sm leading-relaxed bg-green-50 border border-green-200 text-green-800";
+        box.innerHTML =
+          "<div class='font-semibold text-base mb-1'>✅ 카드 등록(빌링키 발급) 성공</div>" +
+          "<div class='text-green-700'>customer_uid: <code class='font-mono bg-green-100 px-1 rounded'>" +
+          escapeHtml(detail) +
+          "</code></div>" +
+          "<div class='mt-2 text-green-600 text-xs'>콘솔(F12 → Console)에서 전체 응답을 확인할 수 있습니다.</div>";
+      } else {
+        box.className =
+          "mt-6 rounded-xl p-5 text-sm leading-relaxed bg-red-50 border border-red-200 text-red-800";
+        box.innerHTML =
+          "<div class='font-semibold text-base mb-1'>❌ 카드 등록 실패</div>" +
+          "<div class='text-red-700'>" + escapeHtml(detail) + "</div>" +
+          "<div class='mt-2 text-red-500 text-xs'>콘솔(F12 → Console)에서 전체 응답을 확인할 수 있습니다.</div>";
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    // 모바일 리다이렉트 후 결과 파라미터 처리 (m_redirect_url 복귀 시)
+    (function checkRedirectResult() {
+      const params = new URLSearchParams(window.location.search);
+      const impSuccess = params.get("imp_success");
+      if (impSuccess === null) return;
+
+      if (impSuccess === "true") {
+        console.log("[모바일 리다이렉트] 빌링키 발급 성공 — imp_uid:", params.get("imp_uid"));
+        showResult("success", params.get("imp_uid") || "");
+      } else {
+        const errMsg = params.get("error_msg") || "알 수 없는 오류";
+        console.warn("[모바일 리다이렉트] 빌링키 발급 실패 —", errMsg);
+        showResult("error", errMsg);
+      }
+
+      // URL에서 파라미터 제거
+      history.replaceState(null, "", window.location.pathname);
+    })();
+  </script>
+
+</body>
+</html>

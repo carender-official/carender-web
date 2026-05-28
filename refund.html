@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>환불·취소 정책 — 캐린더</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: { extend: { fontFamily: { sans: ['"Noto Sans KR"', 'system-ui', 'sans-serif'] } } }
+    }
+  </script>
+</head>
+<body class="font-sans antialiased bg-slate-50 text-slate-800">
+
+  <header class="bg-white border-b border-slate-100 sticky top-0 z-10">
+    <div class="max-w-3xl mx-auto px-6 py-4 flex items-center gap-4">
+      <a href="index.html" class="text-slate-400 hover:text-slate-600 transition-colors flex items-center gap-2 text-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        메인으로
+      </a>
+      <span class="text-slate-300">|</span>
+      <span class="font-semibold text-slate-700">캐린더</span>
+    </div>
+  </header>
+
+  <main class="max-w-3xl mx-auto px-6 py-12">
+    <h1 class="text-2xl font-bold text-slate-900 mb-2">환불·취소 정책</h1>
+    <p class="text-sm text-slate-400 mb-10">시행일: 2026년 5월 21일</p>
+
+    <div class="prose prose-slate max-w-none space-y-8 text-sm leading-relaxed">
+
+      <p class="text-slate-600">캐린더(이하 "회사")는 「전자상거래 등에서의 소비자보호에 관한 법률」 등 관련 법령에 따라 다음과 같이 환불·취소 정책을 운영합니다.</p>
+
+      <section>
+        <h2 class="text-base font-bold text-slate-800 mb-3">1. 무료 체험 및 청약철회 (결제 후 7일 이내)</h2>
+        <ul class="list-none space-y-2 text-slate-600">
+          <li>1) 회사는 유료서비스 결제 전 7일간 무료 체험을 제공하여, 회원이 유료 기능을 충분히 시험 사용한 뒤 결제 여부를 결정할 수 있도록 합니다.</li>
+          <li>2) 회원은 유료서비스를 결제한 후 해당 결제분의 유료서비스를 이용하지 않은 경우, 결제일(또는 유료서비스 이용이 가능하게 된 날)부터 7일 이내에 청약철회(전액 환불)를 요청할 수 있습니다.</li>
+          <li>3) 다만 「전자상거래법」 제17조제2항에 따라, 결제 후 유료서비스의 제공(이용)이 개시된 경우에는 청약철회가 제한될 수 있습니다. 회사는 이 경우 결제 화면에서 청약철회가 제한된다는 사실을 사전에 명확히 고지하며, 무료 체험 제공을 통해 회원의 청약철회 권리 행사가 부당하게 방해받지 않도록 합니다.</li>
+          <li>4) 본 정책 중 관련 법령상 소비자에게 불리한 부분은 그 범위에서 효력이 없습니다.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-base font-bold text-slate-800 mb-3">2. 정기결제(월 구독)의 해지 및 환불</h2>
+        <ul class="list-none space-y-2 text-slate-600">
+          <li>1) <strong class="text-slate-700">자동갱신 해지:</strong> 회원은 언제든지 [설정 &gt; 구독 관리] 또는 고객센터를 통해 다음 결제주기의 자동갱신을 해지할 수 있으며, 해지 시 다음 주기부터 요금이 청구되지 않습니다.</li>
+          <li>2) <strong class="text-slate-700">중도 해지 시 이용 기간:</strong> 자동갱신을 해지하더라도 이미 결제한 현재 결제주기의 종료일까지 유료서비스를 계속 이용할 수 있습니다. 이용이 개시된 결제주기에 대해서는 잔여기간에 대한 부분 환불을 제공하지 않습니다.</li>
+          <li>3) 위 2)는 제1조의 청약철회권(7일) 및 제3조의 회사 귀책·오결제에 따른 환불을 제한하지 않습니다.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-base font-bold text-slate-800 mb-3">3. 회사 귀책 또는 결제 오류에 따른 환불</h2>
+        <ul class="list-none space-y-2 text-slate-600">
+          <li>1) 회사의 귀책사유로 서비스를 정상적으로 이용하지 못한 경우, 회원은 환불을 요청할 수 있으며 회사는 이용하지 못한 기간에 상응하는 금액을 환불합니다.</li>
+          <li>2) 시스템 오류 등으로 중복 결제 또는 오결제가 발생한 경우, 회사는 확인 후 해당 금액을 전액 환불합니다.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-base font-bold text-slate-800 mb-3">4. 환불 방법 및 처리 기간</h2>
+        <ul class="list-none space-y-2 text-slate-600">
+          <li>1) 환불은 원칙적으로 결제 시 사용한 결제수단으로 취소·환불됩니다.</li>
+          <li>2) 카드 결제 취소의 경우, 회사의 환불 처리 후 카드사 사정에 따라 실제 대금 취소·환급까지 영업일 기준 며칠이 소요될 수 있습니다.</li>
+          <li>3) 환불 대상(결제 후 미이용 등)에 해당하는 요청을 접수한 경우, 회사는 영업일 기준 3일 이내에 환불 절차를 진행합니다.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-base font-bold text-slate-800 mb-3">5. 환불 신청 방법</h2>
+        <ul class="list-disc list-inside text-slate-600 space-y-1">
+          <li>이메일: <a href="mailto:carender.official@gmail.com" class="text-indigo-600 hover:underline">carender.official@gmail.com</a></li>
+          <li>서비스 내 [설정 &gt; 구독 관리] 또는 고객센터 메뉴</li>
+          <li>신청 시 결제 일시·결제 금액·계정 정보를 함께 알려주시면 처리가 빠릅니다.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-base font-bold text-slate-800 mb-3">6. 영수증 및 결제 증빙</h2>
+        <ul class="list-none space-y-2 text-slate-600">
+          <li>1) 카드 결제 시 발급되는 매출전표가 법정 영수증을 대신합니다.</li>
+          <li>2) 회원은 결제 시 입력한 이메일로 결제내역 안내를 받을 수 있으며, 결제 증빙이 추가로 필요한 경우 고객센터로 요청할 수 있습니다.</li>
+        </ul>
+      </section>
+
+      <section class="bg-slate-100 rounded-xl p-5">
+        <h2 class="text-base font-bold text-slate-800 mb-2">문의처</h2>
+        <ul class="list-none space-y-1 text-slate-600">
+          <li>상호명: 캐린더 / 대표자: 조예림</li>
+          <li>사업자등록번호: 227-10-53381 / 통신판매업 신고번호: 제2026-강원춘천-0350호</li>
+          <li>이메일: <a href="mailto:carender.official@gmail.com" class="text-indigo-600 hover:underline">carender.official@gmail.com</a></li>
+        </ul>
+      </section>
+
+      <p class="text-slate-500 text-xs">본 정책에 명시되지 않은 사항은 관련 법령 및 회사 이용약관에 따릅니다.</p>
+
+    </div>
+  </main>
+
+  <footer class="bg-slate-900 text-slate-500 py-8 px-6 text-center text-xs mt-16">
+    <p>&copy; 2026 캐린더. All rights reserved.</p>
+  </footer>
+
+</body>
+</html>
