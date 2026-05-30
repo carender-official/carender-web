@@ -57,115 +57,22 @@
     </div>
   </header>
 
-  <main class="max-w-lg mx-auto px-6 py-16">
+  <main class="max-w-md mx-auto px-6 py-20">
 
-    <div class="text-center mb-10">
-      <span class="inline-block bg-brand-100 text-brand-700 text-xs font-semibold px-3 py-1 rounded-full mb-4">구독 플랜</span>
-      <h1 class="text-3xl font-bold text-slate-800 mb-3">캐린더 구독</h1>
-      <p class="text-slate-500 text-sm leading-relaxed">
-        월 구독을 시작하려면 카드를 등록해 주세요.<br/>
-        빌링키 발급만 진행되며 즉시 결제는 발생하지 않습니다.
-      </p>
-    </div>
-
-    <!-- 스탠다드 플랜 카드 -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-4">
-      <div class="flex items-center justify-between mb-4">
-        <div>
-          <div class="font-semibold text-slate-800">스탠다드</div>
-          <div class="text-sm text-slate-400 mt-0.5">매월 자동 결제</div>
-        </div>
-        <div class="text-right">
-          <div class="text-2xl font-bold text-slate-700">₩1,900</div>
-          <div class="text-xs text-slate-400">/ 월</div>
-        </div>
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 text-center">
+      <div id="loading">
+        <div class="w-12 h-12 border-4 border-brand-100 border-t-brand-500 rounded-full animate-spin mx-auto mb-5"></div>
+        <p class="text-slate-700 font-medium text-lg">카드 등록창을 불러오는 중…</p>
+        <p class="text-slate-400 text-sm mt-2">잠시만 기다려 주세요.</p>
+        <p class="text-slate-400 text-xs mt-5 leading-relaxed">
+          카드 정보는 포트원(KCP)을 통해 안전하게 처리됩니다.<br/>
+          빌링키 발급만 진행되며 즉시 결제는 발생하지 않습니다.
+        </p>
       </div>
-      <ul class="space-y-2 text-sm text-slate-600 border-t border-slate-100 pt-4">
-        <li class="flex items-center gap-2">
-          <svg class="w-4 h-4 text-brand-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-          </svg>
-          월 공유 50개
-        </li>
-        <li class="flex items-center gap-2">
-          <svg class="w-4 h-4 text-brand-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-          </svg>
-          파일 공유 500MB
-        </li>
-        <li class="flex items-center gap-2">
-          <svg class="w-4 h-4 text-brand-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-          </svg>
-          링크 유효기간 14일
-        </li>
-      </ul>
-      <button
-        onclick="requestBilling('standard')"
-        class="w-full mt-5 bg-slate-700 hover:bg-slate-800 active:bg-slate-900 text-white font-semibold py-3 rounded-xl transition-colors text-sm flex items-center justify-center gap-2"
-      >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
-        </svg>
-        스탠다드 구독 시작하기 (₩1,900/월)
-      </button>
+
+      <!-- 결과 영역 (모바일 리다이렉트 복귀 / 결제 콜백 표시용) -->
+      <div id="result-box" class="hidden rounded-xl p-5 text-sm leading-relaxed text-left"></div>
     </div>
-
-    <!-- 프리미엄 플랜 카드 -->
-    <div class="bg-white rounded-2xl shadow-sm border border-brand-100 p-6 mb-6">
-      <div class="flex items-center justify-between mb-4">
-        <div>
-          <div class="font-semibold text-slate-800">프리미엄 <span class="text-xs font-medium bg-brand-100 text-brand-700 px-1.5 py-0.5 rounded-full ml-1">추천</span></div>
-          <div class="text-sm text-slate-400 mt-0.5">매월 자동 결제</div>
-        </div>
-        <div class="text-right">
-          <div class="text-2xl font-bold text-brand-600">₩2,900</div>
-          <div class="text-xs text-slate-400">/ 월</div>
-        </div>
-      </div>
-      <ul class="space-y-2 text-sm text-slate-600 border-t border-slate-100 pt-4">
-        <li class="flex items-center gap-2">
-          <svg class="w-4 h-4 text-brand-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-          </svg>
-          월 공유 무제한
-        </li>
-        <li class="flex items-center gap-2">
-          <svg class="w-4 h-4 text-brand-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-          </svg>
-          파일 공유 2GB
-        </li>
-        <li class="flex items-center gap-2">
-          <svg class="w-4 h-4 text-brand-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-          </svg>
-          링크 유효기간 30일
-        </li>
-        <li class="flex items-center gap-2">
-          <svg class="w-4 h-4 text-brand-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-          </svg>
-          말풍선 디자인 커스텀 · 아이콘 크기 조절
-        </li>
-      </ul>
-      <button
-        onclick="requestBilling('pro')"
-        class="w-full mt-5 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-semibold py-3 rounded-xl transition-colors text-sm shadow-lg shadow-brand-200 flex items-center justify-center gap-2"
-      >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
-        </svg>
-        프리미엄 구독 시작하기 (₩2,900/월)
-      </button>
-    </div>
-
-    <p class="text-center text-xs text-slate-400 mt-3">
-      카드 정보는 포트원(KCP)이 안전하게 처리합니다. 언제든지 구독 취소 가능합니다.
-    </p>
-
-    <!-- 결과 영역 -->
-    <div id="result-box" class="hidden mt-6 rounded-xl p-5 text-sm leading-relaxed"></div>
 
   </main>
 
@@ -187,7 +94,6 @@
 
     async function requestBilling(planKey, userId) {
       const plan = PLAN_INFO[planKey] || PLAN_INFO.pro;
-      document.querySelectorAll('button[onclick^="requestBilling"]').forEach(b => { b.disabled = true; });
 
       // user_id가 전달되지 않았으면 세션에서 조회
       if (!userId && sb) {
@@ -223,20 +129,21 @@
             console.warn("빌링키 발급 실패 —", rsp.error_msg);
             showResult("error", rsp.error_msg);
           }
-
-          // 버튼들 다시 활성화 (결제창 닫힌 후)
-          document.querySelectorAll('button[onclick^="requestBilling"]').forEach(b => { b.disabled = false; });
         }
       );
     }
 
     function showResult(type, detail) {
+      // 결과가 나오면 로딩 스피너 숨김
+      const loading = document.getElementById("loading");
+      if (loading) loading.classList.add("hidden");
+
       const box = document.getElementById("result-box");
       box.classList.remove("hidden");
 
       if (type === "success") {
         box.className =
-          "mt-6 rounded-xl p-5 text-sm leading-relaxed bg-green-50 border border-green-200 text-green-800";
+          "rounded-xl p-5 text-sm leading-relaxed bg-green-50 border border-green-200 text-green-800 text-left";
         box.innerHTML =
           "<div class='font-semibold text-base mb-1'>✅ 카드 등록(빌링키 발급) 성공</div>" +
           "<div class='text-green-700'>customer_uid: <code class='font-mono bg-green-100 px-1 rounded'>" +
@@ -245,7 +152,7 @@
           "<div class='mt-2 text-green-600 text-xs'>콘솔(F12 → Console)에서 전체 응답을 확인할 수 있습니다.</div>";
       } else {
         box.className =
-          "mt-6 rounded-xl p-5 text-sm leading-relaxed bg-red-50 border border-red-200 text-red-800";
+          "rounded-xl p-5 text-sm leading-relaxed bg-red-50 border border-red-200 text-red-800 text-left";
         box.innerHTML =
           "<div class='font-semibold text-base mb-1'>❌ 카드 등록 실패</div>" +
           "<div class='text-red-700'>" + escapeHtml(detail) + "</div>" +
@@ -288,10 +195,16 @@
       if (params.get("imp_success") !== null) return;
 
       const tierCode = params.get("tier_code");
-      if (!tierCode || !PLAN_INFO[tierCode]) return;
+      if (!tierCode || !PLAN_INFO[tierCode]) {
+        // 잘못된/누락된 진입 → 결제창 띄우지 말고 홈으로
+        console.warn("[구독] tier_code 누락 또는 잘못된 값 — 홈으로 이동:", tierCode);
+        window.location.replace("/");
+        return;
+      }
 
       if (!sb) {
-        console.error("[구독] supabase-js 로드 실패 — 자동 결제를 시작할 수 없습니다.");
+        console.error("[구독] supabase-js 로드 실패 — 홈으로 이동");
+        window.location.replace("/");
         return;
       }
 
