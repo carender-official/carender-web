@@ -6,6 +6,7 @@
   <title>캐린더 — 내 최애가 직접 챙겨주는 일정</title>
   <meta name="description" content="캐린더는 내 최애 캐릭터가 직접 일정을 챙겨주는 Windows 데스크톱 캘린더 앱입니다." />
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -194,36 +195,44 @@
       <h2 class="text-2xl sm:text-3xl font-bold text-center text-slate-800 mb-3">플랜 비교</h2>
       <p class="text-center text-slate-400 mb-6">필요한 만큼 선택하세요</p>
       <p class="text-center text-xs text-slate-400 bg-slate-50 border border-slate-100 rounded-xl py-2.5 px-4 mb-10 max-w-lg mx-auto">모든 플랜에서 일정 관리 · 캐릭터 알림 · 데스크톱 위젯을 사용할 수 있어요</p>
-      <div class="grid md:grid-cols-3 gap-6 items-start">
+      <div class="grid md:grid-cols-3 gap-6 items-stretch">
 
         <!-- 무료 -->
-        <div class="rounded-2xl border border-slate-200 p-7">
+        <div class="rounded-2xl border border-slate-200 p-7 flex flex-col">
           <p class="text-sm font-semibold text-slate-500 mb-1">무료</p>
           <p class="text-3xl font-bold text-slate-900 mb-6">무료</p>
-          <ul class="space-y-3 text-sm text-slate-600 mb-0">
+          <ul class="space-y-3 text-sm text-slate-600 flex-grow">
             <li class="flex items-start gap-2"><span class="text-brand-400 mt-0.5">✓</span>월 일정 공유 15개</li>
             <li class="flex items-start gap-2"><span class="text-brand-400 mt-0.5">✓</span>파일 공유 100 MB</li>
             <li class="flex items-start gap-2"><span class="text-brand-400 mt-0.5">✓</span>공유 링크 유효기간 7일</li>
           </ul>
+          <a href="https://github.com/carender-official/carender/releases/download/v1.0.0/Setup.0.1.0.exe"
+             class="mt-6 block text-center border border-slate-300 hover:border-slate-400 hover:bg-slate-50 text-slate-700 font-semibold py-3 rounded-xl transition-colors">
+            무료로 시작하기
+          </a>
         </div>
 
         <!-- 스탠다드 -->
-        <div class="rounded-2xl border border-slate-200 p-7">
+        <div class="rounded-2xl border border-slate-200 p-7 flex flex-col">
           <p class="text-sm font-semibold text-slate-500 mb-1">스탠다드</p>
           <div class="flex items-baseline gap-1 mb-6">
             <span class="text-3xl font-bold text-slate-900">₩1,900</span>
             <span class="text-sm text-slate-400">/ 월</span>
           </div>
-          <ul class="space-y-3 text-sm text-slate-600">
+          <ul class="space-y-3 text-sm text-slate-600 flex-grow">
             <li class="flex items-start gap-2"><span class="text-brand-400 mt-0.5">✓</span>월 일정 공유 50개</li>
             <li class="flex items-start gap-2"><span class="text-brand-400 mt-0.5">✓</span>파일 공유 500 MB</li>
             <li class="flex items-start gap-2"><span class="text-brand-400 mt-0.5">✓</span>공유 링크 유효기간 14일</li>
             <li class="flex items-start gap-2"><span class="text-brand-400 mt-0.5">✓</span>공유받은 링크에서 첨부파일 다운로드</li>
           </ul>
+          <button type="button" data-tier="standard"
+            class="subscribe-btn mt-6 w-full bg-slate-700 hover:bg-slate-800 active:bg-slate-900 text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+            구독하기
+          </button>
         </div>
 
         <!-- 프리미엄 (추천) -->
-        <div class="rounded-2xl border-2 border-brand-500 p-7 relative shadow-lg shadow-brand-100">
+        <div class="rounded-2xl border-2 border-brand-500 p-7 relative shadow-lg shadow-brand-100 flex flex-col">
           <div class="absolute -top-3.5 left-1/2 -translate-x-1/2">
             <span class="bg-brand-600 text-white text-xs font-bold px-4 py-1 rounded-full">추천</span>
           </div>
@@ -232,7 +241,7 @@
             <span class="text-3xl font-bold text-slate-900">₩2,900</span>
             <span class="text-sm text-slate-400">/ 월</span>
           </div>
-          <ul class="space-y-3 text-sm text-slate-600">
+          <ul class="space-y-3 text-sm text-slate-600 flex-grow">
             <li class="flex items-start gap-2"><span class="text-brand-500 mt-0.5 font-bold">✓</span>월 일정 공유 무제한</li>
             <li class="flex items-start gap-2"><span class="text-brand-500 mt-0.5 font-bold">✓</span>파일 공유 2 GB</li>
             <li class="flex items-start gap-2"><span class="text-brand-500 mt-0.5 font-bold">✓</span>공유 링크 유효기간 30일</li>
@@ -241,6 +250,10 @@
             <li class="flex items-start gap-2"><span class="text-brand-500 mt-0.5 font-bold">✓</span>SVG 캐릭터 라이브러리</li>
             <li class="flex items-start gap-2"><span class="text-brand-500 mt-0.5 font-bold">✓</span>알림 아이콘 크기 조절</li>
           </ul>
+          <button type="button" data-tier="pro"
+            class="subscribe-btn mt-6 w-full bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-semibold py-3 rounded-xl transition-colors shadow-lg shadow-brand-200 disabled:opacity-60 disabled:cursor-not-allowed">
+            구독하기
+          </button>
         </div>
 
       </div>
@@ -345,6 +358,53 @@
       </p>
     </div>
   </footer>
+
+  <!-- ===== Supabase 인증 + 구독 버튼 핸들러 ===== -->
+  <script>
+    (function () {
+      const SUPABASE_URL = 'https://rjiprlqixjrqptnvxwsj.supabase.co';
+      const SUPABASE_ANON_KEY = 'sb_publishable_SLAee1GmoAXs4VbapQySpw_yYjj4c3z';
+
+      if (!window.supabase || !window.supabase.createClient) {
+        console.error('[구독] supabase-js 로드 실패 — CDN을 확인하세요.');
+        return;
+      }
+      const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      async function handleSubscribe(btn) {
+        const tier = btn.dataset.tier; // 'standard' | 'pro'
+        if (!tier) return;
+        btn.disabled = true;
+        try {
+          const { data: { session } } = await sb.auth.getSession();
+
+          if (!session) {
+            // 비로그인 → 구글 OAuth 시작 (로그인 후 홈으로 복귀)
+            const { error } = await sb.auth.signInWithOAuth({
+              provider: 'google',
+              options: {
+                redirectTo: window.location.origin + '/',
+                queryParams: { prompt: 'select_account' },
+              },
+            });
+            if (error) throw error;
+            return; // 브라우저가 구글 로그인 페이지로 이동함
+          }
+
+          // 로그인 상태 → 구독 결제 페이지로 이동
+          window.location.href = '/subscribe.html?tier_code=' + encodeURIComponent(tier);
+        } catch (e) {
+          console.error('[구독] 처리 중 오류:', e);
+          btn.disabled = false;
+          alert('로그인 처리 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+        }
+      }
+
+      document.querySelectorAll('.subscribe-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () { handleSubscribe(btn); });
+      });
+    })();
+  </script>
 
 </body>
 </html>

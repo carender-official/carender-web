@@ -10,6 +10,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <!-- 포트원 V1 SDK -->
   <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
+  <!-- Supabase (세션에서 user_id 조회용) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -171,14 +173,31 @@
     // 포트원 V1 초기화
     IMP.init("imp12333754");
 
+    // Supabase (세션에서 user_id 조회용)
+    const SUPABASE_URL = 'https://rjiprlqixjrqptnvxwsj.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_SLAee1GmoAXs4VbapQySpw_yYjj4c3z';
+    const sb = (window.supabase && window.supabase.createClient)
+      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+      : null;
+
     const PLAN_INFO = {
       standard: { name: '캐린더 스탠다드 월 구독', amount: 1900 },
       pro:      { name: '캐린더 프리미엄 월 구독', amount: 2900 },
     };
 
-    function requestBilling(planKey) {
+    async function requestBilling(planKey, userId) {
       const plan = PLAN_INFO[planKey] || PLAN_INFO.pro;
       document.querySelectorAll('button[onclick^="requestBilling"]').forEach(b => { b.disabled = true; });
+
+      // user_id가 전달되지 않았으면 세션에서 조회
+      if (!userId && sb) {
+        try {
+          const { data: { session } } = await sb.auth.getSession();
+          userId = session && session.user ? session.user.id : null;
+        } catch (e) {
+          console.warn("[구독] 세션 조회 실패:", e);
+        }
+      }
 
       const merchantUid  = "order_" + Date.now();
       const customerUid  = "customer_" + Math.random().toString(36).slice(2, 10);
@@ -191,6 +210,7 @@
           name:          plan.name,
           amount:        plan.amount,
           customer_uid:  customerUid,
+          custom_data:   { user_id: userId || null, tier_code: planKey },
           m_redirect_url: "https://carender.kr/subscribe",
         },
         function (rsp) {
@@ -258,6 +278,35 @@
 
       // URL에서 파라미터 제거
       history.replaceState(null, "", window.location.pathname);
+    })();
+
+    // tier_code 쿼리로 진입하면 자동으로 결제창 호출 (홈 구독하기 버튼 흐름)
+    (async function autoStartBilling() {
+      const params = new URLSearchParams(window.location.search);
+
+      // 모바일 리다이렉트 복귀(imp_success)는 결과 처리만 하고 자동 시작하지 않음
+      if (params.get("imp_success") !== null) return;
+
+      const tierCode = params.get("tier_code");
+      if (!tierCode || !PLAN_INFO[tierCode]) return;
+
+      if (!sb) {
+        console.error("[구독] supabase-js 로드 실패 — 자동 결제를 시작할 수 없습니다.");
+        return;
+      }
+
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) {
+        // 세션 없음 → 홈으로 보내 로그인부터 진행
+        console.warn("[구독] 세션 없음 — 홈으로 이동하여 로그인이 필요합니다.");
+        window.location.replace("/");
+        return;
+      }
+
+      // 새로고침 시 중복 결제 방지: URL에서 tier_code 제거
+      history.replaceState(null, "", window.location.pathname);
+
+      requestBilling(tierCode, session.user.id);
     })();
   </script>
 
