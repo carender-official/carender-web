@@ -92,8 +92,12 @@
       pro:      { name: '캐린더 프리미엄 월 구독', amount: 2900 },
     };
 
+    // 결제 실패/취소 시 "다시 시도" 버튼이 어떤 tier로 재시도할지 기억
+    let currentTier = null;
+
     async function requestBilling(planKey, userId) {
       const plan = PLAN_INFO[planKey] || PLAN_INFO.pro;
+      currentTier = planKey;
 
       // user_id가 전달되지 않았으면 세션에서 조회
       if (!userId && sb) {
@@ -153,11 +157,31 @@
       } else {
         box.className =
           "rounded-xl p-5 text-sm leading-relaxed bg-red-50 border border-red-200 text-red-800 text-left";
+        const retryBtn = currentTier
+          ? "<button type='button' onclick='retryBilling()' class='flex-1 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-semibold py-2.5 rounded-lg transition-colors'>다시 시도</button>"
+          : "";
         box.innerHTML =
-          "<div class='font-semibold text-base mb-1'>❌ 카드 등록 실패</div>" +
+          "<div class='font-semibold text-base mb-1'>카드 등록이 완료되지 않았어요</div>" +
           "<div class='text-red-700'>" + escapeHtml(detail) + "</div>" +
-          "<div class='mt-2 text-red-500 text-xs'>콘솔(F12 → Console)에서 전체 응답을 확인할 수 있습니다.</div>";
+          "<div class='mt-4 flex gap-2'>" +
+            retryBtn +
+            "<a href='/' class='flex-1 text-center border border-slate-300 hover:border-slate-400 hover:bg-white text-slate-700 font-semibold py-2.5 rounded-lg transition-colors'>홈으로</a>" +
+          "</div>";
       }
+    }
+
+    // [다시 시도] — 같은 tier로 결제 재시작
+    function retryBilling() {
+      if (!currentTier || !PLAN_INFO[currentTier]) {
+        window.location.href = "/";
+        return;
+      }
+      // 결과 박스 숨기고 로딩 스피너 다시 보여주기
+      const box = document.getElementById("result-box");
+      const loading = document.getElementById("loading");
+      if (box) box.classList.add("hidden");
+      if (loading) loading.classList.remove("hidden");
+      requestBilling(currentTier);
     }
 
     function escapeHtml(str) {
