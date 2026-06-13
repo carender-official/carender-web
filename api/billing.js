@@ -4,6 +4,15 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'Content-Type',
 }
 
+// 플랜 정식 키: 'standard' | 'pro'  ('premium' 은 구 키 → 'pro' 로 정규화)
+const PLAN_KEYS = ['standard', 'pro']
+function resolvePlanKey(raw) {
+  if (!raw) return null
+  const k = String(raw).toLowerCase()
+  if (k === 'premium') return 'pro'             // 레거시 별칭 수렴
+  return PLAN_KEYS.includes(k) ? k : null
+}
+
 module.exports = async (req, res) => {
   // OPTIONS 프리플라이트
   if (req.method === 'OPTIONS') {
@@ -35,7 +44,12 @@ module.exports = async (req, res) => {
     return
   }
 
-  const { customer_uid, user_id } = body
+  const { customer_uid, user_id, tier_code, plan } = body
+
+  // 플랜 식별: 결제 요청에 명시적으로 실린 식별자(tier_code/plan)를 사용.
+  // billing.js 는 빌링키 발급 확인 요청이라 청구 금액이 없어 금액 이중 체크 불가 →
+  // 식별자가 없으면 plan 을 쓰지 않고 webhook(금액 기반)에 위임한다.
+  const planKey = resolvePlanKey(tier_code || plan)
 
   if (!customer_uid || !user_id) {
     res.writeHead(400, { ...CORS_HEADERS, 'Content-Type': 'application/json' })
@@ -109,10 +123,16 @@ module.exports = async (req, res) => {
     customer_uid,
     billing_key:        billingData.response.customer_uid,
     subscription_status: 'active',
-    plan:               'premium',
     is_trial:           false,
     last_payment_at:    now.toISOString(),
     next_billing_date:  nextBillingDate.toISOString(),
+  }
+  // 명시적 식별자가 있을 때만 plan 기록 (정식 키). 없으면 webhook 이 금액 기반으로 채움.
+  if (planKey) {
+    patch.plan = planKey
+    console.log('[billing] plan 식별 — 명시적 식별자:', planKey)
+  } else {
+    console.log('[billing] plan 식별자 없음 — plan 미기록, webhook(금액 기반) 위임')
   }
 
   console.log('[billing] Supabase 업데이트 시작 — user_id:', user_id)

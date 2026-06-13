@@ -1,5 +1,11 @@
 {
   "cleanUrls": true,
+  "crons": [
+    {
+      "path": "/api/renew",
+      "schedule": "0 1 * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/pay",

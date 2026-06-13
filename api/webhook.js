@@ -4,6 +4,16 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'Content-Type',
 }
 
+// 플랜 정식 키: 'standard' | 'pro'  ('premium' 은 구 키 → 'pro' 로 정규화)
+const PLAN_KEYS = ['standard', 'pro']
+const PLAN_BY_AMOUNT = { 1900: 'standard', 2900: 'pro' }
+function resolvePlanKey(raw) {
+  if (!raw) return null
+  const k = String(raw).toLowerCase()
+  if (k === 'premium') return 'pro'             // 레거시 별칭 수렴
+  return PLAN_KEYS.includes(k) ? k : null
+}
+
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') {
     res.writeHead(200, CORS_HEADERS)
@@ -73,6 +83,7 @@ module.exports = async (req, res) => {
   // ── 3. imp_uid로 결제 정보 조회 → customer_uid 추출 ─────────────
   console.log('[webhook] 결제 정보 조회 — imp_uid:', imp_uid)
   let customerUid
+  let planKey = null
   try {
     const payRes  = await fetch(`https://api.iamport.kr/payments/${encodeURIComponent(imp_uid)}`, {
       headers: { Authorization: accessToken },
@@ -86,6 +97,37 @@ module.exports = async (req, res) => {
     }
     customerUid = payData.response.customer_uid
     console.log('[webhook] customer_uid 확인:', customerUid)
+
+    // 플랜 식별: 검증된 실제 청구금액(amount)이 1차. tier_code 는 교차검증용으로만 사용.
+    let tierFromCustom = null
+    try {
+      const cd = typeof payData.response.custom_data === 'string'
+        ? JSON.parse(payData.response.custom_data)
+        : payData.response.custom_data
+      tierFromCustom = cd && cd.tier_code ? cd.tier_code : null
+    } catch { tierFromCustom = null }
+
+    const planFromAmount = PLAN_BY_AMOUNT[payData.response.amount] || null
+    const planFromCustom = resolvePlanKey(tierFromCustom)
+    if (!planFromAmount) {
+      // 1900/2900 어느 쪽도 아님 → 알 수 없는 결제. profiles 를 전혀 건드리지 않고
+      // (status/next_billing_date 포함 어떤 필드도 미기록) 경고만 남긴 뒤 200 으로 종료한다.
+      // 200 인 이유: 포트원이 webhook 실패로 간주해 재전송하는 것을 막기 위함.
+      console.warn('[webhook] 알 수 없는 결제금액 — profiles 미반영 / imp_uid:', imp_uid,
+        '/ customer_uid:', customerUid, '/ amount:', payData.response.amount, '/ tier_code:', tierFromCustom)
+      res.writeHead(200, { ...CORS_HEADERS, 'Content-Type': 'application/json' })
+      res.end(JSON.stringify({ ok: true, skipped: 'unknown_amount' }))
+      return
+    } else {
+      // 금액 기준으로 기록. tier_code 가 어긋나면 금액을 신뢰하고 조작 의심 흔적을 남긴다.
+      planKey = planFromAmount
+      if (planFromCustom && planFromCustom !== planFromAmount) {
+        console.warn('[webhook] 플랜 불일치(조작 의심) — 금액:', planFromAmount, '/ tier_code:', planFromCustom,
+          '→ 금액 기준 기록 / customer_uid:', customerUid, '/ imp_uid:', imp_uid)
+      } else {
+        console.log('[webhook] plan 식별(금액 기준):', planKey, '(tier_code:', planFromCustom, ')')
+      }
+    }
   } catch (e) {
     console.error('[webhook] 결제 조회 예외:', e.message)
     res.writeHead(500, { ...CORS_HEADERS, 'Content-Type': 'application/json' })
@@ -155,7 +197,8 @@ module.exports = async (req, res) => {
           customer_uid:        customerUid,
           billing_key:         customerUid,
           subscription_status: 'active',
-          plan:                'premium',
+          // planKey 가 null(알 수 없는 결제)이면 plan 미기록 — 기존 plan 값을 덮어쓰지 않는다.
+          ...(planKey ? { plan: planKey } : {}),
           is_trial:            false,
           last_payment_at:     now.toISOString(),
           next_billing_date:   nextBillingDate.toISOString(),
