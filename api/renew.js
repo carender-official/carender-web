@@ -261,12 +261,17 @@ module.exports = async (req, res) => {
     try {
       if (paid) {
         // 성공: 주기 앵커 유지(+1개월/+1년), active, 재시도 카운트 리셋, 정식 키로 수렴 기록
+        // + 새 결제 사이클 시작이므로 사용량 카운터 0 리필 + reset_date 를 오늘(KST)로 갱신
         const patch = {
           subscription_status: 'active',
           plan:                planKey,                                  // premium → pro 수렴
           next_billing_date:   extendFromAnchor(row.next_billing_date, interval),
           last_payment_at:     nowIso,
           billing_retry_count: 0,
+          monthly_shared_events:    0,                                   // 덮어쓰기(누적 아님)
+          monthly_upload_mb:        0,                                   // 덮어쓰기(누적 아님)
+          shared_events_reset_date: seoulDate(new Date()),              // KST 'YYYY-MM-DD'
+          upload_reset_date:        seoulDate(new Date()),              // KST 'YYYY-MM-DD'
         }
         await patchProfile(supabaseUrl, sbHeaders, userId, patch)
         result.succeeded++
