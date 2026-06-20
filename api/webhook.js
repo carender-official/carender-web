@@ -4,6 +4,8 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'Content-Type',
 }
 
+const { addMonthsClamped } = require('./_lib/billing-date')
+
 // 플랜 정식 키: 'standard' | 'pro'  ('premium' 은 구 키 → 'pro' 로 정규화)
 const PLAN_KEYS = ['standard', 'pro']
 const PLAN_BY_AMOUNT = { 1900: 'standard', 2900: 'pro' }
@@ -175,8 +177,7 @@ module.exports = async (req, res) => {
 
   // ── 6. Supabase profiles 업데이트 ───────────────────────────────
   const now             = new Date()
-  const nextBillingDate = new Date(now)
-  nextBillingDate.setDate(nextBillingDate.getDate() + 30)
+  const nextBillingDate = addMonthsClamped(now, 1)
 
   console.log('[webhook] Supabase 업데이트 — user_id:', userId)
   try {

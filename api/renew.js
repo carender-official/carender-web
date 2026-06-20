@@ -4,6 +4,8 @@
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' }
 
+const { addMonthsClamped } = require('./_lib/billing-date')
+
 // ── 플랜 매핑 ────────────────────────────────────────────────────
 // 정식 키: 'standard' | 'pro'  ('premium' 은 구 키 → 'pro' 로 정규화)
 // 월 구독만 가격이 정의돼 있음. 연간 상품/가격은 제품에 아직 없으므로 'year' 는 가격 미정 → 스킵.
@@ -31,10 +33,8 @@ function seoulYmd(date) {
 
 // 기존 next_billing_date 를 앵커로 다음 주기 계산 (now() 기준 아님 → 무료 구간 누적 방지)
 function extendFromAnchor(anchorIso, interval) {
-  const d = new Date(anchorIso)
-  if (interval === 'year') d.setFullYear(d.getFullYear() + 1)
-  else d.setMonth(d.getMonth() + 1)
-  return d.toISOString()
+  const months = interval === 'year' ? 12 : 1
+  return addMonthsClamped(new Date(anchorIso), months).toISOString()
 }
 
 module.exports = async (req, res) => {
