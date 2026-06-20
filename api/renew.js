@@ -31,6 +31,14 @@ function seoulYmd(date) {
   }).format(date).replace(/-/g, '')
 }
 
+// reset_date 컬럼용: KST 오늘 날짜를 'YYYY-MM-DD'(대시 포함)로 반환.
+// (사용량 리더가 reset_date.slice(0,7)='YYYY-MM' 로 월 비교하므로 대시 포함 형식이어야 한다.)
+function seoulDate(date) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(date)
+}
+
 // 기존 next_billing_date 를 앵커로 다음 주기 계산 (now() 기준 아님 → 무료 구간 누적 방지)
 function extendFromAnchor(anchorIso, interval) {
   const months = interval === 'year' ? 12 : 1
@@ -60,6 +68,70 @@ module.exports = async (req, res) => {
     'Authorization': `Bearer ${serviceKey}`,
     'Content-Type':  'application/json',
   }
+
+  // ── 1.5 상태 강등 (결제와 무관 — PortOne 토큰 불필요, UPDATE 전용) ──────
+  // 기존 결제 대상 쿼리/again/결제 루프와 완전히 분리된 선행 처리.
+  // 절대시각(UTC ISO)으로 비교하며, 아래 결제 로직의 nowIso 와는 별도 변수를 쓴다.
+  const degradeNowIso = new Date().toISOString()
+  let trialExpiredCount = 0
+  let cancelExpiredCount = 0
+
+  // 블록 1 — 체험 만료 서버 강등: is_trial=true AND trial_end_date < now
+  try {
+    const q1 = `${supabaseUrl}/rest/v1/profiles`
+      + `?select=id`
+      + `&is_trial=eq.true`
+      + `&trial_end_date=lt.${encodeURIComponent(degradeNowIso)}`
+    const r1 = await fetch(q1, { headers: sbHeaders })
+    if (r1.ok) {
+      const expiredTrials = await r1.json()
+      for (const t of expiredTrials) {
+        try {
+          await patchProfile(supabaseUrl, sbHeaders, t.id, { plan: 'free', is_trial: false })
+          trialExpiredCount++
+        } catch (e) {
+          console.error('[renew] 체험 만료 강등 실패 — userId:', t.id, '/', e.message)
+        }
+      }
+    } else {
+      console.error('[renew] 체험 만료 대상 조회 실패 — status:', r1.status)
+    }
+  } catch (e) {
+    console.error('[renew] 체험 만료 블록 예외:', e.message)
+  }
+
+  // 블록 2 — 해지 후 만료 강등: subscription_status='canceled' AND next_billing_date < now
+  // 무료 전환일(KST)을 새 사용량 사이클 기준점으로 reset_date 2개에 박는다. (카운터 값 자체는 미변경)
+  const degradeTodayKst = seoulDate(new Date())   // 'YYYY-MM-DD' (KST)
+  try {
+    const q2 = `${supabaseUrl}/rest/v1/profiles`
+      + `?select=id`
+      + `&subscription_status=eq.canceled`
+      + `&next_billing_date=lt.${encodeURIComponent(degradeNowIso)}`
+    const r2 = await fetch(q2, { headers: sbHeaders })
+    if (r2.ok) {
+      const expiredCancels = await r2.json()
+      for (const c of expiredCancels) {
+        try {
+          await patchProfile(supabaseUrl, sbHeaders, c.id, {
+            plan:                     'free',
+            subscription_status:      'expired',
+            shared_events_reset_date: degradeTodayKst,
+            upload_reset_date:        degradeTodayKst,
+          })
+          cancelExpiredCount++
+        } catch (e) {
+          console.error('[renew] 해지 만료 강등 실패 — userId:', c.id, '/', e.message)
+        }
+      }
+    } else {
+      console.error('[renew] 해지 만료 대상 조회 실패 — status:', r2.status)
+    }
+  } catch (e) {
+    console.error('[renew] 해지 만료 블록 예외:', e.message)
+  }
+
+  console.log('[renew] 상태 강등 —', JSON.stringify({ trial_expired: trialExpiredCount, cancel_expired: cancelExpiredCount }))
 
   // ── 2. PortOne 액세스 토큰 발급 (billing.js/webhook.js 와 동일 방식) ──
   let accessToken
@@ -123,6 +195,8 @@ module.exports = async (req, res) => {
     failed: 0,
     skipped: 0,
     downgraded: 0,
+    trial_expired: trialExpiredCount,
+    cancel_expired: cancelExpiredCount,
     details: [],
   }
 
