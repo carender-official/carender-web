@@ -24,6 +24,24 @@
       <p class="text-red-500 font-medium text-lg mb-2">오류가 발생했습니다.</p>
       <p id="error-msg" class="text-slate-500 text-sm"></p>
     </div>
+
+    <!-- 결제 전 동의 게이트 (전자상거래법 제17조 사전고지) -->
+    <div id="consent" class="hidden text-left">
+      <h1 class="text-lg font-bold text-slate-800 mb-3 text-center">결제 전 확인해 주세요</h1>
+      <div class="rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm leading-relaxed p-4">
+        캐린더는 결제 전 7일 무료 체험으로 모든 기능을 충분히 사용해보실 수 있습니다.
+        결제 후 유료 서비스 이용을 시작하시면 「전자상거래법」 제17조에 따라
+        청약철회(전액 환불)가 제한될 수 있습니다.
+      </div>
+      <label class="flex items-start gap-2 mt-4 cursor-pointer select-none">
+        <input type="checkbox" id="consent-check" class="mt-0.5 w-4 h-4 accent-indigo-600" />
+        <span class="text-sm text-slate-700">위 내용을 확인했으며 이에 동의합니다</span>
+      </label>
+      <button type="button" id="pay-proceed" disabled
+        class="mt-5 w-full bg-indigo-500 hover:bg-indigo-600 active:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+        결제 진행
+      </button>
+    </div>
   </div>
 
   <script>
@@ -45,9 +63,10 @@
       document.getElementById('error-msg').textContent = msg
     }
 
-    if (!customerUid) {
-      showError('잘못된 접근입니다. 캐린더 앱에서 다시 시도해 주세요.')
-    } else {
+    // 결제 실행: 동의 후 '결제 진행' 클릭 시 호출.
+    // IMP.request_pay 파라미터는 무수정 — 즉시 실행에서 함수로 추출했을 뿐.
+    // IMP.init 도 이 시점으로 옮겨 iamport CDN 실패가 고지 표시를 막지 않게 한다.
+    function startPayment() {
       IMP.init('imp12333754')
 
       console.log('[포트원] 결제 요청 — tier_code:', tierCode, '/ amount:', tier.amount)
@@ -60,6 +79,31 @@
         amount:       tier.amount,
         customer_uid: customerUid,
         m_redirect_url: 'https://carender.kr/pay/done?customer_uid=' + encodeURIComponent(customerUid),
+      })
+    }
+
+    // 초기 표시: customer_uid 없으면 기존 에러, 있으면 동의 게이트 먼저(결제는 버튼 클릭 후).
+    if (!customerUid) {
+      showError('잘못된 접근입니다. 캐린더 앱에서 다시 시도해 주세요.')
+    } else {
+      document.getElementById('loading').classList.add('hidden')
+      document.getElementById('error').classList.add('hidden')
+      document.getElementById('consent').classList.remove('hidden')
+
+      const check   = document.getElementById('consent-check')
+      const proceed = document.getElementById('pay-proceed')
+
+      // 버튼 활성/비활성은 오직 체크박스 상태에만 연동
+      check.addEventListener('change', function () {
+        proceed.disabled = !check.checked
+      })
+
+      proceed.addEventListener('click', function () {
+        if (!check.checked) return         // 게이트 이중 안전장치
+        proceed.disabled = true             // 중복 클릭 방지
+        document.getElementById('consent').classList.add('hidden')
+        document.getElementById('loading').classList.remove('hidden')
+        startPayment()
       })
     }
   </script>
