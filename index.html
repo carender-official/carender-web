@@ -392,8 +392,12 @@
             return; // 브라우저가 구글 로그인 페이지로 이동함
           }
 
-          // 로그인 상태 → 구독 결제 페이지로 이동
-          window.location.href = '/subscribe.html?tier_code=' + encodeURIComponent(tier);
+          // 로그인 상태 → 현행 결제 페이지(/pay)로 이동.
+          // customer_uid 는 앱(SettingsView)과 동일한 'customer_' + user.id 형식 →
+          // webhook 이 replace(/^customer_/,'') 로 user_id 를 역산할 수 있어야 한다.
+          const customerUid = 'customer_' + session.user.id;
+          window.location.href = '/pay?customer_uid=' + encodeURIComponent(customerUid)
+                               + '&tier_code=' + encodeURIComponent(tier);
         } catch (e) {
           console.error('[구독] 처리 중 오류:', e);
           btn.disabled = false;
