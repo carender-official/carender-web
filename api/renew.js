@@ -101,8 +101,7 @@ module.exports = async (req, res) => {
   }
 
   // 블록 2 — 해지 후 만료 강등: subscription_status='canceled' AND next_billing_date < now
-  // 무료 전환일(KST)을 새 사용량 사이클 기준점으로 reset_date 2개에 박는다. (카운터 값 자체는 미변경)
-  const degradeTodayKst = seoulDate(new Date())   // 'YYYY-MM-DD' (KST)
+  // reset_date 는 가입일 기준이므로 전환일로 박지 않는다 → 직후 1.6 reset_expired_usage 가 가입일 기준으로 처리.
   try {
     const q2 = `${supabaseUrl}/rest/v1/profiles`
       + `?select=id`
@@ -114,10 +113,8 @@ module.exports = async (req, res) => {
       for (const c of expiredCancels) {
         try {
           await patchProfile(supabaseUrl, sbHeaders, c.id, {
-            plan:                     'free',
-            subscription_status:      'expired',
-            shared_events_reset_date: degradeTodayKst,
-            upload_reset_date:        degradeTodayKst,
+            plan:                'free',
+            subscription_status: 'expired',
           })
           cancelExpiredCount++
         } catch (e) {
