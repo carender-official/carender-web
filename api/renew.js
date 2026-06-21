@@ -133,6 +133,28 @@ module.exports = async (req, res) => {
 
   console.log('[renew] 상태 강등 —', JSON.stringify({ trial_expired: trialExpiredCount, cancel_expired: cancelExpiredCount }))
 
+  // ── 1.6 만료된 무료 유저 사용량 자동 리셋 (RPC, 결제 무관) ──────────────
+  // 강등 블록 직후 실행 → 같은 실행에서 free 로 막 전환된 유저도 리셋 대상에 포함.
+  // reset_expired_usage() 는 인자 없는 Supabase 함수(리셋된 행 수 integer 반환).
+  let usageResetCount = 0
+  try {
+    const rpcRes = await fetch(`${supabaseUrl}/rest/v1/rpc/reset_expired_usage`, {
+      method: 'POST',
+      headers: sbHeaders,
+      body: '{}',
+    })
+    if (rpcRes.ok) {
+      const rpcBody = await rpcRes.json()
+      usageResetCount = typeof rpcBody === 'number' ? rpcBody : (Number(rpcBody) || 0)
+    } else {
+      console.error('[renew] 사용량 리셋 RPC 실패 — status:', rpcRes.status, '/', await rpcRes.text())
+    }
+  } catch (e) {
+    console.error('[renew] 사용량 리셋 RPC 예외:', e.message)
+  }
+
+  console.log('[renew] 사용량 자동 리셋 —', JSON.stringify({ usage_reset: usageResetCount }))
+
   // ── 2. PortOne 액세스 토큰 발급 (billing.js/webhook.js 와 동일 방식) ──
   let accessToken
   try {
@@ -197,6 +219,7 @@ module.exports = async (req, res) => {
     downgraded: 0,
     trial_expired: trialExpiredCount,
     cancel_expired: cancelExpiredCount,
+    usage_reset: usageResetCount,
     details: [],
   }
 
