@@ -73,22 +73,22 @@
       <!-- 결과 영역 (모바일 리다이렉트 복귀 / 결제 콜백 표시용) -->
       <div id="result-box" class="hidden rounded-xl p-5 text-sm leading-relaxed text-left"></div>
 
-      <!-- 결제 전 동의 게이트 (전자상거래법 제17조 사전고지) -->
-      <div id="consent" class="hidden text-left">
-        <h1 class="text-lg font-bold text-slate-800 mb-3 text-center">결제 전 확인해 주세요</h1>
-        <div class="rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm leading-relaxed p-4">
-          캐린더는 결제 전 7일 무료 체험으로 모든 기능을 충분히 사용해보실 수 있습니다.
-          결제 후 유료 서비스 이용을 시작하시면 「전자상거래법」 제17조에 따라
-          청약철회(전액 환불)가 제한될 수 있습니다.
-        </div>
-        <label class="flex items-start gap-2 mt-4 cursor-pointer select-none">
-          <input type="checkbox" id="consent-check" class="mt-0.5 w-4 h-4 accent-brand-600" />
-          <span class="text-sm text-slate-700">위 내용을 확인했으며 이에 동의합니다</span>
-        </label>
-        <button type="button" id="pay-proceed" disabled
-          class="mt-5 w-full bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-          결제 진행
-        </button>
+      <!-- 앱 결제 안내 (웹 직접 진입 시 결제 대신 앱으로 유도) -->
+      <div id="app-guide" class="hidden text-center">
+        <h1 class="text-lg font-bold text-slate-800 mb-3">구독 결제는 앱에서 진행해 주세요</h1>
+        <p class="text-slate-600 text-sm leading-relaxed">
+          구독 결제는 캐린더 앱에서 진행해주세요. 앱을 설치하고 로그인한 뒤
+          <span class="font-semibold text-slate-700">설정 &gt; 구독 관리</span>에서 결제할 수 있습니다.
+        </p>
+        <a href="https://github.com/carender-official/carender/releases/download/v0.1.3/Setup.0.1.3.exe"
+           class="mt-6 inline-flex items-center justify-center gap-2 w-full bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-semibold py-3 rounded-xl transition-colors">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M13 5v8.586l3.293-3.293 1.414 1.414L12 17.414l-5.707-5.707 1.414-1.414L11 13.586V5h2zm-7 14h12v-2H6v2z"/>
+          </svg>
+          캐린더 앱 다운로드
+        </a>
+        <p class="text-slate-400 text-xs mt-3">Windows 10/11 전용 · 약 75 MB</p>
+        <a href="/" class="mt-4 inline-block text-sm text-slate-400 hover:text-slate-600 transition-colors">메인으로 돌아가기</a>
       </div>
     </div>
 
@@ -112,10 +112,6 @@
 
     // 결제 실패/취소 시 "다시 시도" 버튼이 어떤 tier로 재시도할지 기억
     let currentTier = null;
-
-    // 동의 게이트: 검증 통과 후 tier/userId 를 보관했다가 '결제 진행' 클릭 시 requestBilling 에 전달
-    let pendingTier = null;
-    let pendingUserId = null;
 
     async function requestBilling(planKey, userId) {
       const plan = PLAN_INFO[planKey] || PLAN_INFO.pro;
@@ -214,32 +210,6 @@
         .replace(/"/g, "&quot;");
     }
 
-    // 동의 화면 표시 + 게이트. 체크박스 동의 후 '결제 진행' 클릭 시에만 requestBilling 실행.
-    // (requestBilling/IMP.request_pay 내부는 무수정 — 호출 타이밍만 자동→버튼클릭으로 이동)
-    function showConsent() {
-      const loading = document.getElementById("loading");
-      if (loading) loading.classList.add("hidden");
-      const consent = document.getElementById("consent");
-      if (consent) consent.classList.remove("hidden");
-
-      const check   = document.getElementById("consent-check");
-      const proceed = document.getElementById("pay-proceed");
-      if (!check || !proceed) return;
-
-      // 버튼 활성/비활성은 오직 체크박스 상태에만 연동
-      check.addEventListener("change", function () {
-        proceed.disabled = !check.checked;
-      });
-
-      proceed.addEventListener("click", function () {
-        if (!check.checked) return;        // 게이트 이중 안전장치
-        proceed.disabled = true;            // 중복 클릭 방지
-        if (consent) consent.classList.add("hidden");
-        if (loading) loading.classList.remove("hidden");
-        requestBilling(pendingTier, pendingUserId);
-      });
-    }
-
     // 모바일 리다이렉트 후 결과 파라미터 처리 (m_redirect_url 복귀 시)
     (function checkRedirectResult() {
       const params = new URLSearchParams(window.location.search);
@@ -259,43 +229,18 @@
       history.replaceState(null, "", window.location.pathname);
     })();
 
-    // tier_code 쿼리로 진입하면 자동으로 결제창 호출 (홈 구독하기 버튼 흐름)
-    (async function autoStartBilling() {
+    // 웹 직접 진입 시 자동 결제 시작을 막고 앱 결제 안내 화면(#app-guide)을 표시.
+    // (고아/테스트 페이지 직접 진입으로 인한 결제 먹통 차단 → 앱으로 유도)
+    (function showAppGuide() {
       const params = new URLSearchParams(window.location.search);
 
-      // 모바일 리다이렉트 복귀(imp_success)는 결과 처리만 하고 자동 시작하지 않음
+      // 모바일 리다이렉트 복귀(imp_success)는 checkRedirectResult가 결과를 표시하므로 안내 화면을 띄우지 않음
       if (params.get("imp_success") !== null) return;
 
-      const tierCode = params.get("tier_code");
-      if (!tierCode || !PLAN_INFO[tierCode]) {
-        // 잘못된/누락된 진입 → 결제창 띄우지 말고 홈으로
-        console.warn("[구독] tier_code 누락 또는 잘못된 값 — 홈으로 이동:", tierCode);
-        window.location.replace("/");
-        return;
-      }
-
-      if (!sb) {
-        console.error("[구독] supabase-js 로드 실패 — 홈으로 이동");
-        window.location.replace("/");
-        return;
-      }
-
-      const { data: { session } } = await sb.auth.getSession();
-      if (!session) {
-        // 세션 없음 → 홈으로 보내 로그인부터 진행
-        console.warn("[구독] 세션 없음 — 홈으로 이동하여 로그인이 필요합니다.");
-        window.location.replace("/");
-        return;
-      }
-
-      // 새로고침 시 중복 결제 방지: URL에서 tier_code 제거
-      history.replaceState(null, "", window.location.pathname);
-
-      // 자동 즉시 결제 → 동의 게이트로 전환: tier/userId 보관 후 동의 화면 표시.
-      // requestBilling 호출은 '결제 진행' 버튼 클릭 시점으로 이동(함수 내부는 무수정).
-      pendingTier = tierCode;
-      pendingUserId = session.user.id;
-      showConsent();
+      const loading = document.getElementById("loading");
+      if (loading) loading.classList.add("hidden");
+      const guide = document.getElementById("app-guide");
+      if (guide) guide.classList.remove("hidden");
     })();
   </script>
 
