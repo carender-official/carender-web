@@ -79,6 +79,7 @@
         amount:       tier.amount,
         customer_uid: customerUid,
         m_redirect_url: 'https://carender.kr/pay/done?customer_uid=' + encodeURIComponent(customerUid),
+        custom_data: { tier_code: tierCode },
       })
     }
 
