@@ -217,7 +217,9 @@ module.exports = async (req, res) => {
     const userId = row.id
     const customerUid = row.customer_uid
     const interval = row.billing_interval || 'month'   // 컬럼 없으면 월 구독으로 간주
-    const planKey = resolvePlanKey(row.plan)
+    // 예약 다운그레이드 우선: pending_plan 이 있으면 그 plan 으로 금액·plan 결정(이번 청구부터 적용).
+    // pending_plan 이 없거나 미식별이면 기존 plan 으로 청구.
+    const planKey = resolvePlanKey(row.pending_plan) || resolvePlanKey(row.plan)
 
     // 안전장치: 이중으로 canceled/expired 제외 (조회 필터로 이미 제외되지만 명시적으로 한 번 더)
     if (row.subscription_status === 'canceled' || row.subscription_status === 'expired') {
@@ -276,7 +278,8 @@ module.exports = async (req, res) => {
         // + 새 결제 사이클 시작이므로 사용량 카운터 0 리필 + reset_date 를 오늘(KST)로 갱신
         const patch = {
           subscription_status: 'active',
-          plan:                planKey,                                  // premium → pro 수렴
+          plan:                planKey,                                  // premium → pro 수렴 / 예약 다운 적용분
+          pending_plan:        null,                                    // 예약 소진(없었으면 그대로 null)
           next_billing_date:   extendFromAnchor(row.next_billing_date, interval),
           last_payment_at:     nowIso,
           billing_retry_count: 0,
