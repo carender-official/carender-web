@@ -138,6 +138,15 @@ module.exports = async (req, res) => {
     return
   }
 
+  // 조회는 성공했으나 해당 프로필 행이 없음(빈 배열) → 체험 여부를 알 수 없으므로
+  // (가)/(나) 진입 전에 차단. 비체험으로 오인되어 즉시청구되는 것을 막는다.
+  if (!profile) {
+    console.warn('[billing] 프로필 없음 — 청구 차단 / user_id:', user_id)
+    res.writeHead(404, { ...CORS_HEADERS, 'Content-Type': 'application/json' })
+    res.end(JSON.stringify({ ok: false, charged: false, reason: 'profile_not_found' }))
+    return
+  }
+
   const now    = new Date()
   const isTrialActive =
     !!profile &&
