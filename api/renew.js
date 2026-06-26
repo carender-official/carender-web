@@ -60,15 +60,24 @@ module.exports = async (req, res) => {
   let cancelExpiredCount = 0
 
   // 블록 1 — 체험 만료 서버 강등: is_trial=true AND trial_end_date < now
+  // 단, 빌링키(customer_uid)가 있는 체험 유저는 강등 대상에서 제외한다.
+  // (체험 중 결제로 next_billing_date=trial_end_date 가 예약돼 있으므로, 만료 시점에
+  //  아래 청구 루프가 잡아서 첫 청구를 일으킨다. free 로 내리면 안 된다.)
+  // 쿼리에서 customer_uid=is.null 로 1차 제외 + 루프에서 명시적으로 한 번 더 가드.
   try {
     const q1 = `${supabaseUrl}/rest/v1/profiles`
-      + `?select=id`
+      + `?select=id,customer_uid`
       + `&is_trial=eq.true`
       + `&trial_end_date=lt.${encodeURIComponent(degradeNowIso)}`
+      + `&customer_uid=is.null`
     const r1 = await fetch(q1, { headers: sbHeaders })
     if (r1.ok) {
       const expiredTrials = await r1.json()
       for (const t of expiredTrials) {
+        if (t.customer_uid) {
+          // 빌링키 보유 → 강등 금지(청구 루프에 위임). 쿼리 필터의 안전장치.
+          continue
+        }
         try {
           await patchProfile(supabaseUrl, sbHeaders, t.id, { plan: 'free', is_trial: false })
           trialExpiredCount++
