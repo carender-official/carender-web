@@ -47,6 +47,27 @@
       </div>
     </div>
 
+    <!-- 결제 실패 (빌링키는 발급됐으나 서버 청구 실패) -->
+    <div id="view-fail" class="hidden">
+      <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg class="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        </svg>
+      </div>
+      <h2 class="text-xl font-bold text-slate-700 mb-2">결제를 완료하지 못했어요.</h2>
+      <p id="fail-error-msg" class="text-slate-400 text-xs mb-5 hidden"></p>
+      <div class="flex flex-col gap-2">
+        <button id="btn-retry-fail"
+          class="w-full text-sm font-medium py-2.5 rounded-xl bg-indigo-500 text-white hover:bg-indigo-600 active:bg-indigo-700 transition-colors">
+          다시 시도
+        </button>
+        <button id="btn-close-fail"
+          class="w-full text-sm font-medium py-2.5 rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 active:bg-slate-300 transition-colors">
+          닫기
+        </button>
+      </div>
+    </div>
+
     <!-- 결과 불명 (파라미터 없음 → 타임아웃) -->
     <div id="view-unknown" class="hidden">
       <div class="w-16 h-16 bg-yellow-50 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -81,11 +102,45 @@
     const impSuccess  = params.get('imp_success')
     const errorMsg    = params.get('error_msg') || ''
     const customerUid = params.get('customer_uid') || ''
+    const tierCode    = params.get('tier_code') || ''
 
     function show(id) {
-      ['view-success', 'view-cancel', 'view-unknown', 'view-waiting'].forEach(v => {
+      ['view-success', 'view-cancel', 'view-fail', 'view-unknown', 'view-waiting'].forEach(v => {
         document.getElementById(v).classList.toggle('hidden', v !== id)
       })
+    }
+
+    function showFail(msg) {
+      const el = document.getElementById('fail-error-msg')
+      if (msg) {
+        el.textContent = msg
+        el.classList.remove('hidden')
+      } else {
+        el.classList.add('hidden')
+      }
+      show('view-fail')
+    }
+
+    // 결제창 성공 후 서버 호출: 빌링키 기반 첫 청구(또는 체험 중이면 청구 예약).
+    async function chargeViaServer() {
+      if (!customerUid) { showFail('결제 정보를 확인할 수 없어요.'); return }
+      const userId = customerUid.replace(/^customer_/, '')
+      try {
+        const res = await fetch('/api/billing', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ customer_uid: customerUid, user_id: userId, tier_code: tierCode }),
+        })
+        let data = {}
+        try { data = await res.json() } catch {}
+        if (res.ok && data.ok) {
+          show('view-success')
+        } else {
+          showFail(data.reason || data.error || '결제 처리에 실패했어요.')
+        }
+      } catch (e) {
+        showFail('네트워크 오류로 결제를 완료하지 못했어요.')
+      }
     }
 
     function retryUrl() {
@@ -98,10 +153,13 @@
     document.getElementById('btn-close').onclick        = () => { window.close() }
     document.getElementById('btn-retry-unknown').onclick = () => { window.location.href = retryUrl() }
     document.getElementById('btn-close-unknown').onclick = () => { window.close() }
+    document.getElementById('btn-retry-fail').onclick     = () => { window.location.href = retryUrl() }
+    document.getElementById('btn-close-fail').onclick     = () => { window.close() }
 
     if (impSuccess === 'true') {
-      // ── 성공: 기존 흐름 그대로 ──────────────────────────────────
-      show('view-success')
+      // ── 결제창 성공 → 서버에 첫 청구/예약 요청 후 결과로 화면 분기 ──
+      show('view-waiting')
+      chargeViaServer()
 
     } else if (impSuccess === 'false') {
       // ── 실패 / 취소 ────────────────────────────────────────────
