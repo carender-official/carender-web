@@ -4,16 +4,8 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'Content-Type',
 }
 
-const { addMonthsClamped } = require('./_lib/billing-date')
-
-// 플랜 정식 키: 'standard' | 'pro'  ('premium' 은 구 키 → 'pro' 로 정규화)
-const PLAN_KEYS = ['standard', 'pro']
-function resolvePlanKey(raw) {
-  if (!raw) return null
-  const k = String(raw).toLowerCase()
-  if (k === 'premium') return 'pro'             // 레거시 별칭 수렴
-  return PLAN_KEYS.includes(k) ? k : null
-}
+const { addMonthsClamped, seoulYmd } = require('./_lib/billing-date')
+const { PLAN_PRICING, resolvePlanKey } = require('./_lib/plan-pricing')
 
 module.exports = async (req, res) => {
   // OPTIONS 프리플라이트
@@ -48,18 +40,24 @@ module.exports = async (req, res) => {
 
   const { customer_uid, user_id, tier_code, plan } = body
 
-  // 플랜 식별: 결제 요청에 명시적으로 실린 식별자(tier_code/plan)를 사용.
-  // billing.js 는 빌링키 발급 확인 요청이라 청구 금액이 없어 금액 이중 체크 불가 →
-  // 식별자가 없으면 plan 을 쓰지 않고 webhook(금액 기반)에 위임한다.
-  const planKey = resolvePlanKey(tier_code || plan)
-
   if (!customer_uid || !user_id) {
     res.writeHead(400, { ...CORS_HEADERS, 'Content-Type': 'application/json' })
     res.end(JSON.stringify({ ok: false, error: 'customer_uid and user_id are required' }))
     return
   }
 
-  console.log('[billing] 요청 수신 — user_id:', user_id, '/ customer_uid:', customer_uid)
+  // 플랜 결정: 즉시청구 단계라 금액(plan)이 필수 → 식별 실패 시 즉시 400.
+  const planKey = resolvePlanKey(tier_code || plan)
+  if (!planKey) {
+    res.writeHead(400, { ...CORS_HEADERS, 'Content-Type': 'application/json' })
+    res.end(JSON.stringify({ ok: false, error: 'Unknown or missing plan (tier_code/plan required)' }))
+    return
+  }
+
+  console.log('[billing] 요청 수신 — user_id:', user_id, '/ customer_uid:', customer_uid, '/ plan:', planKey)
+
+  const supabaseUrl = process.env.SUPABASE_URL
+  const serviceKey  = process.env.SUPABASE_SERVICE_ROLE_KEY
 
   // ── 2. 포트원 인증 토큰 발급 ────────────────────────────────────
   console.log('[billing] 포트원 토큰 발급 요청')
@@ -93,13 +91,13 @@ module.exports = async (req, res) => {
 
   // ── 3. 빌링키 존재 여부 조회 ────────────────────────────────────
   console.log('[billing] 빌링키 조회 요청 — customer_uid:', customer_uid)
-  let billingData
+  let billingKey
   try {
     const billingRes = await fetch(
       `https://api.iamport.kr/subscribe/customers/${encodeURIComponent(customer_uid)}`,
       { headers: { Authorization: accessToken } }
     )
-    billingData = await billingRes.json()
+    const billingData = await billingRes.json()
 
     if (billingData.code !== 0 || !billingData.response?.customer_uid) {
       console.warn('[billing] 빌링키 검증 실패 — code:', billingData.code, '/ message:', billingData.message)
@@ -108,7 +106,8 @@ module.exports = async (req, res) => {
       return
     }
 
-    console.log('[billing] 빌링키 검증 성공 — customer_uid:', billingData.response.customer_uid)
+    billingKey = billingData.response.customer_uid
+    console.log('[billing] 빌링키 검증 성공 — customer_uid:', billingKey)
   } catch (e) {
     console.error('[billing] 빌링키 조회 예외:', e.message)
     res.writeHead(500, { ...CORS_HEADERS, 'Content-Type': 'application/json' })
@@ -116,59 +115,142 @@ module.exports = async (req, res) => {
     return
   }
 
-  // ── 4. Supabase profiles 업데이트 ───────────────────────────────
-  const now = new Date()
-  const nextBillingDate = addMonthsClamped(now, 1)
-
-  const patch = {
-    customer_uid,
-    billing_key:        billingData.response.customer_uid,
-    subscription_status: 'active',
-    is_trial:           false,
-    last_payment_at:    now.toISOString(),
-    next_billing_date:  nextBillingDate.toISOString(),
-  }
-  // 명시적 식별자가 있을 때만 plan 기록 (정식 키). 없으면 webhook 이 금액 기반으로 채움.
-  if (planKey) {
-    patch.plan = planKey
-    console.log('[billing] plan 식별 — 명시적 식별자:', planKey)
-  } else {
-    console.log('[billing] plan 식별자 없음 — plan 미기록, webhook(금액 기반) 위임')
-  }
-
-  console.log('[billing] Supabase 업데이트 시작 — user_id:', user_id)
+  // ── 4. 현재 유저 상태 조회 (is_trial / trial_end_date) ──────────
+  let profile = null
   try {
-    const supabaseUrl = process.env.SUPABASE_URL
-    const serviceKey  = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-    const sbRes = await fetch(
-      `${supabaseUrl}/rest/v1/profiles?id=eq.${encodeURIComponent(user_id)}`,
-      {
-        method: 'PATCH',
-        headers: {
-          'apikey':        serviceKey,
-          'Authorization': `Bearer ${serviceKey}`,
-          'Content-Type':  'application/json',
-          'Prefer':        'return=representation',
-        },
-        body: JSON.stringify(patch),
-      }
+    const pRes = await fetch(
+      `${supabaseUrl}/rest/v1/profiles?id=eq.${encodeURIComponent(user_id)}&select=is_trial,trial_end_date`,
+      { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } }
     )
+    if (!pRes.ok) {
+      const errText = await pRes.text()
+      console.error('[billing] 프로필 조회 실패 — status:', pRes.status, '/ body:', errText)
+      res.writeHead(500, { ...CORS_HEADERS, 'Content-Type': 'application/json' })
+      res.end(JSON.stringify({ ok: false, error: 'Profile fetch failed' }))
+      return
+    }
+    const rows = await pRes.json()
+    profile = Array.isArray(rows) ? rows[0] : null
+  } catch (e) {
+    console.error('[billing] 프로필 조회 예외:', e.message)
+    res.writeHead(500, { ...CORS_HEADERS, 'Content-Type': 'application/json' })
+    res.end(JSON.stringify({ ok: false, error: 'Profile fetch exception' }))
+    return
+  }
 
-    if (!sbRes.ok) {
-      const errText = await sbRes.text()
-      console.error('[billing] Supabase 업데이트 실패 — status:', sbRes.status, '/ body:', errText)
+  const now    = new Date()
+  const isTrialActive =
+    !!profile &&
+    profile.is_trial === true &&
+    profile.trial_end_date &&
+    new Date(profile.trial_end_date) > now
+
+  // ── 5-가. 체험 중 결제: 즉시청구 없이 체험 종료일에 첫 청구 예약 ──
+  if (isTrialActive) {
+    console.log('[billing] 체험 중 결제 — 즉시청구 안 함, trial_end 에 예약 / user_id:', user_id)
+    const patch = {
+      customer_uid,
+      billing_key:         billingKey,
+      plan:                planKey,
+      is_trial:            true,                       // 체험 유지
+      subscription_status: 'active',
+      next_billing_date:   profile.trial_end_date,     // 체험 종료일 = 첫 청구일
+    }
+    try {
+      await patchProfile(supabaseUrl, serviceKey, user_id, patch)
+    } catch (e) {
+      console.error('[billing] 프로필 업데이트 실패(trial) — user_id:', user_id, '/', e.message)
       res.writeHead(500, { ...CORS_HEADERS, 'Content-Type': 'application/json' })
       res.end(JSON.stringify({ ok: false, error: 'Supabase update failed' }))
       return
     }
-
-    console.log('[billing] Supabase 업데이트 성공 — user_id:', user_id)
+    console.log('[billing] 체험 예약 완료 — user_id:', user_id, '/ next_billing_date:', patch.next_billing_date)
     res.writeHead(200, { ...CORS_HEADERS, 'Content-Type': 'application/json' })
-    res.end(JSON.stringify({ ok: true }))
+    res.end(JSON.stringify({ ok: true, charged: false, reason: 'trial_scheduled' }))
+    return
+  }
+
+  // ── 5-나. 비체험 / 체험만료 업그레이드: 즉시 1회 청구 ───────────
+  const pricing     = PLAN_PRICING[planKey]
+  const merchantUid = `first_${user_id}_${seoulYmd(now)}`
+  console.log('[billing] 즉시청구 시도 — user_id:', user_id, '/ amount:', pricing.amount, '/ merchant_uid:', merchantUid)
+
+  let paid = false
+  let failMsg = '알 수 없는 결제 오류'
+  try {
+    const payRes = await fetch('https://api.iamport.kr/subscribe/payments/again', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: accessToken },
+      body: JSON.stringify({
+        customer_uid,
+        merchant_uid: merchantUid,
+        amount:       pricing.amount,
+        name:         pricing.name,
+      }),
+    })
+    const payData = await payRes.json()
+    paid = payData.code === 0 && payData.response && payData.response.status === 'paid'
+    if (!paid) {
+      failMsg = payData.response?.fail_reason || payData.message || failMsg
+      console.warn('[billing] 즉시청구 실패 — user_id:', user_id,
+        '/ code:', payData.code, '/ status:', payData.response?.status, '/ msg:', failMsg)
+    }
   } catch (e) {
-    console.error('[billing] Supabase 업데이트 예외:', e.message)
-    res.writeHead(500, { ...CORS_HEADERS, 'Content-Type': 'application/json' })
-    res.end(JSON.stringify({ ok: false, error: 'Supabase fetch failed' }))
+    console.error('[billing] 즉시청구 예외 — user_id:', user_id, '/', e.message)
+    failMsg = e.message || failMsg
+    paid = false
+  }
+
+  if (paid) {
+    const patch = {
+      customer_uid,
+      billing_key:         billingKey,
+      plan:                planKey,
+      is_trial:            false,
+      subscription_status: 'active',
+      last_payment_at:     now.toISOString(),
+      next_billing_date:   addMonthsClamped(now, 1).toISOString(),
+    }
+    try {
+      await patchProfile(supabaseUrl, serviceKey, user_id, patch)
+    } catch (e) {
+      console.error('[billing] 프로필 업데이트 실패(paid) — user_id:', user_id, '/', e.message)
+      res.writeHead(500, { ...CORS_HEADERS, 'Content-Type': 'application/json' })
+      res.end(JSON.stringify({ ok: false, error: 'Supabase update failed' }))
+      return
+    }
+    console.log('[billing] 즉시청구 성공 — user_id:', user_id, '/ next_billing_date:', patch.next_billing_date)
+    res.writeHead(200, { ...CORS_HEADERS, 'Content-Type': 'application/json' })
+    res.end(JSON.stringify({ ok: true, charged: true }))
+    return
+  }
+
+  // 청구 실패: 빌링키만 보관(plan/status 미상향). 사용자는 재시도 가능.
+  try {
+    await patchProfile(supabaseUrl, serviceKey, user_id, { customer_uid, billing_key: billingKey })
+  } catch (e) {
+    console.error('[billing] 프로필 업데이트 실패(fail) — user_id:', user_id, '/', e.message)
+  }
+  res.writeHead(402, { ...CORS_HEADERS, 'Content-Type': 'application/json' })
+  res.end(JSON.stringify({ ok: false, charged: false, reason: failMsg }))
+}
+
+async function patchProfile(supabaseUrl, serviceKey, userId, patch) {
+  const r = await fetch(
+    `${supabaseUrl}/rest/v1/profiles?id=eq.${encodeURIComponent(userId)}`,
+    {
+      method: 'PATCH',
+      headers: {
+        'apikey':        serviceKey,
+        'Authorization': `Bearer ${serviceKey}`,
+        'Content-Type':  'application/json',
+        'Prefer':        'return=representation',
+      },
+      body: JSON.stringify(patch),
+    }
+  )
+  if (!r.ok) {
+    const t = await r.text()
+    throw new Error(`Supabase PATCH ${r.status}: ${t}`)
   }
 }

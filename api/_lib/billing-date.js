@@ -9,4 +9,13 @@ function addMonthsClamped(date, months) {
   d.setDate(Math.min(targetDay, lastDay))
   return d
 }
-module.exports = { addMonthsClamped }
+
+// merchant_uid 등에 쓰는 결정적 날짜키: Asia/Seoul 기준 'YYYYMMDD'.
+// (서버 타임존과 무관하게 항상 KST 날짜를 쓴다.)
+function seoulYmd(date) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(date).replace(/-/g, '')
+}
+
+module.exports = { addMonthsClamped, seoulYmd }

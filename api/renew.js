@@ -4,32 +4,15 @@
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' }
 
-const { addMonthsClamped } = require('./_lib/billing-date')
-
-// ── 플랜 매핑 ────────────────────────────────────────────────────
-// 정식 키: 'standard' | 'pro'  ('premium' 은 구 키 → 'pro' 로 정규화)
-// 월 구독만 가격이 정의돼 있음. 연간 상품/가격은 제품에 아직 없으므로 'year' 는 가격 미정 → 스킵.
-const PLAN_PRICING = {
-  standard: { amount: 1900, name: '캐린더 스탠다드 월 구독' },
-  pro:      { amount: 2900, name: '캐린더 프리미엄 월 구독' },
-}
-function resolvePlanKey(raw) {
-  if (!raw) return null
-  const k = String(raw).toLowerCase()
-  if (k === 'premium') return 'pro'             // 레거시 별칭 수렴
-  return PLAN_PRICING[k] ? k : null
-}
+const { addMonthsClamped, seoulYmd } = require('./_lib/billing-date')
+// 플랜 가격/키는 billing.js 와 공용 — 중복정의 금지.
+// (월 구독만 가격이 정의됨. 'year' 는 가격 미정 → 아래 청구 루프에서 스킵.)
+const { PLAN_PRICING, resolvePlanKey } = require('./_lib/plan-pricing')
 
 const MAX_RETRY = 3   // billing_retry_count 가 이 값을 "초과"하면 다운그레이드
 
 // 같은 날 cron 이 중복 실행돼도 동일 merchant_uid 로 PortOne 가 이중 결제를 막도록
-// Asia/Seoul 기준 날짜(YYYYMMDD)로 결정적 생성. 익일 재시도는 자연히 새 uid 가 된다.
-// (서버 타임존과 무관하게 항상 KST 날짜를 쓴다.)
-function seoulYmd(date) {
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit',
-  }).format(date).replace(/-/g, '')
-}
+// merchant_uid 는 KST 날짜(YYYYMMDD)로 결정적 생성(seoulYmd, _lib 공용). 익일 재시도는 새 uid.
 
 // reset_date 컬럼용: KST 오늘 날짜를 'YYYY-MM-DD'(대시 포함)로 반환.
 // (사용량 리더가 reset_date.slice(0,7)='YYYY-MM' 로 월 비교하므로 대시 포함 형식이어야 한다.)
