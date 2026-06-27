@@ -186,6 +186,7 @@ module.exports = async (req, res) => {
 
   let paid = false
   let failMsg = '알 수 없는 결제 오류'
+  let lastImpUid = null   // payData 는 try 블록 const 스코프 → patch 에서 못 봄. imp_uid 만 외부 변수로 끌어올림.
   try {
     const payRes = await fetch('https://api.iamport.kr/subscribe/payments/again', {
       method: 'POST',
@@ -199,6 +200,7 @@ module.exports = async (req, res) => {
     })
     const payData = await payRes.json()
     paid = payData.code === 0 && payData.response && payData.response.status === 'paid'
+    lastImpUid = (payData && payData.response && payData.response.imp_uid) || null
     if (!paid) {
       failMsg = payData.response?.fail_reason || payData.message || failMsg
       console.warn('[billing] 즉시청구 실패 — user_id:', user_id,
@@ -219,6 +221,8 @@ module.exports = async (req, res) => {
       subscription_status: 'active',
       last_payment_at:     now.toISOString(),
       next_billing_date:   addMonthsClamped(now, 1).toISOString(),
+      service_used_at:     null,
+      last_imp_uid:        lastImpUid,
     }
     try {
       await patchProfile(supabaseUrl, serviceKey, user_id, patch)
