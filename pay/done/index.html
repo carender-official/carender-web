@@ -144,8 +144,10 @@
     }
 
     function retryUrl() {
-      if (customerUid) return '/pay?customer_uid=' + encodeURIComponent(customerUid)
-      return '/pay'
+      if (!customerUid) return '/pay'
+      let u = '/pay?customer_uid=' + encodeURIComponent(customerUid)
+      if (tierCode) u += '&tier_code=' + encodeURIComponent(tierCode)
+      return u
     }
 
     // 다시 시도 / 닫기 버튼 공통 바인딩
