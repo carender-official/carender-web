@@ -160,7 +160,7 @@ module.exports = async (req, res) => {
     const patch = {
       customer_uid,
       billing_key:         billingKey,
-      plan:                planKey,
+      pending_plan:        planKey,                    // 체험 종료 후 전환할 플랜 기록(plan 즉시변경 안 함 → pro 등급 유지)
       is_trial:            true,                       // 체험 유지
       subscription_status: 'active',
       next_billing_date:   profile.trial_end_date,     // 체험 종료일 = 첫 청구일
