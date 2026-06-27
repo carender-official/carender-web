@@ -249,6 +249,7 @@ module.exports = async (req, res) => {
 
     // ── 4-1. PortOne V1 재청구 ──────────────────────────────────
     let paid = false
+    let lastImpUid = null   // payData 는 try 블록 const 스코프 → patch 에서 못 봄. imp_uid 만 외부 변수로 끌어올림.
     try {
       const payRes = await fetch('https://api.iamport.kr/subscribe/payments/again', {
         method: 'POST',
@@ -262,6 +263,7 @@ module.exports = async (req, res) => {
       })
       const payData = await payRes.json()
       paid = payData.code === 0 && payData.response && payData.response.status === 'paid'
+      lastImpUid = (payData && payData.response && payData.response.imp_uid) || null
       if (!paid) {
         console.warn('[renew] 결제 실패 — userId:', userId,
           '/ code:', payData.code, '/ status:', payData.response?.status, '/ msg:', payData.message)
@@ -288,6 +290,8 @@ module.exports = async (req, res) => {
           monthly_upload_mb:        0,                                   // 덮어쓰기(누적 아님)
           shared_events_reset_date: seoulDate(new Date()),              // KST 'YYYY-MM-DD'
           upload_reset_date:        seoulDate(new Date()),              // KST 'YYYY-MM-DD'
+          service_used_at:          null,                              // 매 갱신마다 미사용 리셋(갱신 결제도 7일 환불 적용)
+          last_imp_uid:             lastImpUid,
         }
         await patchProfile(supabaseUrl, sbHeaders, userId, patch)
         result.succeeded++
