@@ -279,6 +279,7 @@ module.exports = async (req, res) => {
         const patch = {
           subscription_status: 'active',
           plan:                planKey,                                  // premium → pro 수렴 / 예약 다운 적용분
+          is_trial:            false,                                   // 청구 성공 = 체험 종료 = 유료 전환 확정(체험 첫 청구만 true→false, 비체험은 false→false 무해)
           pending_plan:        null,                                    // 예약 소진(없었으면 그대로 null)
           next_billing_date:   extendFromAnchor(row.next_billing_date, interval),
           last_payment_at:     nowIso,
