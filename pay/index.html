@@ -28,14 +28,15 @@
     <!-- 결제 전 동의 게이트 (전자상거래법 제17조 사전고지) -->
     <div id="consent" class="hidden text-left">
       <h1 class="text-lg font-bold text-slate-800 mb-3 text-center">결제 전 확인해 주세요</h1>
-      <div class="rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm leading-relaxed p-4">
-        캐린더는 결제 전 7일 무료 체험으로 모든 기능을 충분히 사용해보실 수 있습니다.
-        결제 후 유료 서비스 이용을 시작하시면 「전자상거래법」 제17조에 따라
-        청약철회(전액 환불)가 제한될 수 있습니다.
+      <div class="rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm leading-relaxed p-4 space-y-2">
+        <p>상품: <span id="consent-product" class="font-semibold"></span> (월 <span id="consent-amount" class="font-semibold"></span>원)</p>
+        <p>매월 자동으로 결제되며, 설정 &gt; 플랜 변경 &gt; 구독 관리에서 언제든 해지할 수 있어요.</p>
+        <p>결제 후 서비스 이용을 시작하면 「전자상거래법」 제17조에 따라
+        청약철회(전액 환불)가 제한될 수 있습니다.</p>
       </div>
       <label class="flex items-start gap-2 mt-4 cursor-pointer select-none">
         <input type="checkbox" id="consent-check" class="mt-0.5 w-4 h-4 accent-indigo-600" />
-        <span class="text-sm text-slate-700">위 내용을 확인했으며 이에 동의합니다</span>
+        <span class="text-sm text-slate-700">위 결제 내용을 확인했으며 이에 동의합니다</span>
       </label>
       <button type="button" id="pay-proceed" disabled
         class="mt-5 w-full bg-indigo-500 hover:bg-indigo-600 active:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
@@ -47,7 +48,7 @@
   <script>
     const params      = new URLSearchParams(window.location.search)
     const customerUid = params.get('customer_uid')
-    const tierCode    = params.get('tier_code') || 'pro'
+    const tierCode    = params.get('tier_code')   // fallback 금지: 누락 시 가드에서 차단
 
     // 티어별 결제 정보
     const TIER_INFO = {
@@ -55,7 +56,8 @@
       pro:      { name: '캐린더 프리미엄 월 구독', amount: 2900 },
       premium:  { name: '캐린더 프리미엄 월 구독', amount: 2900 }, // 구 키 호환
     }
-    const tier = TIER_INFO[tierCode] || TIER_INFO.pro
+    // 유효한 tier_code 일 때만 매칭. 누락/미지정 값은 null → pro 로 fallback 결제 금지.
+    const tier = (tierCode && TIER_INFO[tierCode]) ? TIER_INFO[tierCode] : null
 
     function showError(msg) {
       document.getElementById('loading').classList.add('hidden')
@@ -103,7 +105,14 @@
     // 초기 표시: customer_uid 없으면 기존 에러, 있으면 동의 게이트 먼저(결제는 버튼 클릭 후).
     if (!customerUid) {
       showError('잘못된 접근입니다. 캐린더 앱에서 다시 시도해 주세요.')
+    } else if (!tier) {
+      // tier_code 누락/미지정 → pro fallback 결제 금지. 게이트/결제 진행 안 함.
+      showError('결제 정보를 확인할 수 없어요. 앱에서 다시 시도해 주세요.')
     } else {
+      // 거래조건 동적 주입: 게이트 노출 직전에 상품명·금액 채움.
+      document.getElementById('consent-product').textContent = tier.name
+      document.getElementById('consent-amount').textContent  = tier.amount.toLocaleString()
+
       document.getElementById('loading').classList.add('hidden')
       document.getElementById('error').classList.add('hidden')
       document.getElementById('consent').classList.remove('hidden')
