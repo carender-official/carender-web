@@ -205,6 +205,11 @@ module.exports = async (req, res) => {
       failMsg = payData.response?.fail_reason || payData.message || failMsg
       console.warn('[billing] 즉시청구 실패 — user_id:', user_id,
         '/ code:', payData.code, '/ status:', payData.response?.status, '/ msg:', failMsg)
+      // 8128(신용카드 중복거래) 거부만 사용자 친화 문구로 치환. 로그(위)엔 원문 보존.
+      // 다른 거부 사유(한도초과·정지카드 등)는 fail_reason 원문 그대로 유지.
+      if (typeof failMsg === 'string' && (failMsg.includes('중복거래') || failMsg.includes('8128'))) {
+        failMsg = '플랜 변경은 결제 다음 날부터 가능해요. 내일 다시 시도해 주세요.'
+      }
     }
   } catch (e) {
     console.error('[billing] 즉시청구 예외 — user_id:', user_id, '/', e.message)
