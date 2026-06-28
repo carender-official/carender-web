@@ -131,28 +131,41 @@ module.exports = async (req, res) => {
   if (!pricing) return fail(400, '환불 금액을 결정할 수 없어요(플랜).')
   const amount = pricing.amount
 
-  // ── 4. 중복 가드: 이미 pending/done 요청 있으면 재처리 안 함 ─────
+  // ── 정책: 환불 대상이면 환불 성공/실패·skip 과 무관하게 즉시 무료 전환(환불은 후속). ──
+  //   payments/cancel 시도 전에 1회만 강등한다. 전환 자체가 실패하면 환불 진행 의미 없어 500.
   try {
-    const dupRes = await fetch(
-      `${supabaseUrl}/rest/v1/refund_requests?user_id=eq.${encodeURIComponent(user_id)}`
-        + `&status=in.(pending,done)&select=id&limit=1`,
-      { headers: sbHeaders }
-    )
-    if (dupRes.ok) {
-      const dupRows = await dupRes.json()
-      if (Array.isArray(dupRows) && dupRows.length > 0) {
-        res.writeHead(200, { ...CORS_HEADERS, 'Content-Type': 'application/json' })
-        res.end(JSON.stringify({ ok: true, accepted: true, already: true }))
-        return
-      }
-    } else {
-      const t = await dupRes.text()
-      console.error('[refund] 중복 조회 실패 — status:', dupRes.status, '/', t)
-      return fail(500, 'Refund dedup check failed')
-    }
+    await downgradeProfile()
   } catch (e) {
-    console.error('[refund] 중복 조회 예외:', e.message)
-    return fail(500, 'Refund dedup exception')
+    console.error('[refund] 무료 전환 실패 — user_id:', user_id, '/', e.message)
+    return fail(500, 'Downgrade failed')
+  }
+
+  // ── 4. 중복 가드: 이번 결제건(last_imp_uid)이 이미 done(환불 완료)이면 환불만 skip ─────
+  //   pending 은 재시도 허용(더 이상 dedup 대상 아님). last_imp_uid 없으면 매칭 불가 → dedup skip.
+  //   무료 전환은 위에서 이미 끝났으므로 여기선 환불(payments/cancel)만 건너뛴다.
+  if (profile.last_imp_uid) {
+    try {
+      const dupRes = await fetch(
+        `${supabaseUrl}/rest/v1/refund_requests?user_id=eq.${encodeURIComponent(user_id)}`
+          + `&status=eq.done&imp_uid=eq.${encodeURIComponent(profile.last_imp_uid)}&select=id&limit=1`,
+        { headers: sbHeaders }
+      )
+      if (dupRes.ok) {
+        const dupRows = await dupRes.json()
+        if (Array.isArray(dupRows) && dupRows.length > 0) {
+          res.writeHead(200, { ...CORS_HEADERS, 'Content-Type': 'application/json' })
+          res.end(JSON.stringify({ ok: true, accepted: true, already: true }))
+          return
+        }
+      } else {
+        const t = await dupRes.text()
+        console.error('[refund] 중복 조회 실패 — status:', dupRes.status, '/', t)
+        return fail(500, 'Refund dedup check failed')
+      }
+    } catch (e) {
+      console.error('[refund] 중복 조회 예외:', e.message)
+      return fail(500, 'Refund dedup exception')
+    }
   }
 
   // ── 5. 월경계 판정 (KST 'YYYYMM' 비교) ──────────────────────────
@@ -176,12 +189,54 @@ module.exports = async (req, res) => {
       const tokenData = await tokenRes.json()
       if (tokenData.code !== 0 || !tokenData.response?.access_token) {
         console.error('[refund] 포트원 토큰 발급 실패 — code:', tokenData.code, '/ message:', tokenData.message)
-        return fail(500, 'PortOne token error')
+        // 무료 전환은 이미 끝남 → 환불만 pending 으로 적재하고 200(후속 수동 처리).
+        try {
+          await insertRefundRequest({
+            user_id,
+            status:         'pending',
+            auto_refunded:  false,
+            is_cross_month: false,
+            error_msg:      'PortOne 토큰 실패',
+            imp_uid:        impUid,
+            merchant_uid:   null,
+            amount,
+            customer_uid:   customerUid,
+            plan:           planKey,
+            paid_at:        profile.last_payment_at,
+          })
+        } catch (e2) {
+          console.error('[refund] pending 적재 실패(토큰 실패분) — user_id:', user_id, '/', e2.message)
+          return fail(500, 'Refund pending record failed')
+        }
+        res.writeHead(200, { ...CORS_HEADERS, 'Content-Type': 'application/json' })
+        res.end(JSON.stringify({ ok: true, accepted: true }))
+        return
       }
       accessToken = tokenData.response.access_token
     } catch (e) {
       console.error('[refund] 포트원 토큰 발급 예외:', e.message)
-      return fail(500, 'PortOne token fetch failed')
+      // 무료 전환은 이미 끝남 → 환불만 pending 으로 적재하고 200(후속 수동 처리).
+      try {
+        await insertRefundRequest({
+          user_id,
+          status:         'pending',
+          auto_refunded:  false,
+          is_cross_month: false,
+          error_msg:      'PortOne 토큰 예외: ' + (e.message || ''),
+          imp_uid:        impUid,
+          merchant_uid:   null,
+          amount,
+          customer_uid:   customerUid,
+          plan:           planKey,
+          paid_at:        profile.last_payment_at,
+        })
+      } catch (e2) {
+        console.error('[refund] pending 적재 실패(토큰 예외분) — user_id:', user_id, '/', e2.message)
+        return fail(500, 'Refund pending record failed')
+      }
+      res.writeHead(200, { ...CORS_HEADERS, 'Content-Type': 'application/json' })
+      res.end(JSON.stringify({ ok: true, accepted: true }))
+      return
     }
 
     // payments/cancel 호출
@@ -225,7 +280,6 @@ module.exports = async (req, res) => {
           paid_at:        profile.last_payment_at,
           processed_at:   now.toISOString(),
         })
-        await downgradeProfile()
       } catch (e) {
         console.error('[refund] 환불 성공 후 기록 실패 — user_id:', user_id, '/', e.message)
         return fail(500, 'Refund recorded-but-update failed')
@@ -250,7 +304,6 @@ module.exports = async (req, res) => {
         plan:           planKey,
         paid_at:        profile.last_payment_at,
       })
-      await downgradeProfile()
     } catch (e) {
       console.error('[refund] pending 적재 실패(자동환불 실패분) — user_id:', user_id, '/', e.message)
       return fail(500, 'Refund pending record failed')
@@ -275,7 +328,6 @@ module.exports = async (req, res) => {
       plan:           planKey,
       paid_at:        profile.last_payment_at,
     })
-    await downgradeProfile()
   } catch (e) {
     console.error('[refund] pending 적재 실패(월경계/무imp_uid) — user_id:', user_id, '/', e.message)
     return fail(500, 'Refund pending record failed')
