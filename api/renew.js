@@ -177,7 +177,7 @@ module.exports = async (req, res) => {
   let targets
   try {
     const q = `${supabaseUrl}/rest/v1/profiles`
-      + `?select=*`
+      + `?select=id,customer_uid,pending_plan,plan,subscription_status,next_billing_date,billing_retry_count`
       + `&subscription_status=in.(active,past_due)`
       + `&next_billing_date=lte.${encodeURIComponent(nowIso)}`
     const r = await fetch(q, { headers: sbHeaders })
