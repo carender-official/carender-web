@@ -279,6 +279,7 @@ module.exports = async (req, res) => {
           plan:           planKey,
           paid_at:        profile.last_payment_at,
           processed_at:   now.toISOString(),
+          requested_at:   now.toISOString(),
         })
       } catch (e) {
         console.error('[refund] 환불 성공 후 기록 실패 — user_id:', user_id, '/', e.message)
