@@ -301,7 +301,7 @@ module.exports = async (req, res) => {
         const nextCount = (row.billing_retry_count || 0) + 1
         let patch
         if (nextCount > MAX_RETRY) {
-          patch = { subscription_status: 'expired', plan: 'free', billing_retry_count: nextCount }
+          patch = { subscription_status: 'expired', plan: 'free', pending_plan: null, billing_retry_count: nextCount }
           result.downgraded++
           result.details.push({ userId, downgraded: true, retry: nextCount })
         } else {
