@@ -119,7 +119,7 @@ module.exports = async (req, res) => {
   let profile = null
   try {
     const pRes = await fetch(
-      `${supabaseUrl}/rest/v1/profiles?id=eq.${encodeURIComponent(user_id)}&select=is_trial,trial_end_date`,
+      `${supabaseUrl}/rest/v1/profiles?id=eq.${encodeURIComponent(user_id)}&select=is_trial,trial_end_date,subscription_status,next_billing_date`,
       { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } }
     )
     if (!pRes.ok) {
@@ -176,6 +176,20 @@ module.exports = async (req, res) => {
     console.log('[billing] 체험 예약 완료 — user_id:', user_id, '/ next_billing_date:', patch.next_billing_date)
     res.writeHead(200, { ...CORS_HEADERS, 'Content-Type': 'application/json' })
     res.end(JSON.stringify({ ok: true, charged: false, reason: 'trial_scheduled' }))
+    return
+  }
+
+  // ── 5-나 진입 전: 이미 유효한 유료 구독 중이면 즉시 재청구 안 함(중복결제 방어) ──
+  // 비체험 + active + 다음 결제일이 아직 미래 = 당 주기 결제가 살아있음 → skip.
+  // (환불/해지=canceled, 만료=expired, free, 체험중=is_trial 은 이 조건에서 빠져 정상적으로 (나)청구 허용)
+  if (
+    profile.subscription_status === 'active' &&
+    profile.is_trial === false &&
+    profile.next_billing_date && new Date(profile.next_billing_date) > now
+  ) {
+    console.log('[billing] 이미 유효 구독 중 — 즉시청구 skip / user_id:', user_id)
+    res.writeHead(200, { ...CORS_HEADERS, 'Content-Type': 'application/json' })
+    res.end(JSON.stringify({ ok: true, charged: false, skipped: true, reason: 'already_subscribed' }))
     return
   }
 
