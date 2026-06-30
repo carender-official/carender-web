@@ -1,5 +1,5 @@
 const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://carender.kr',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
 }
@@ -19,6 +19,16 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     res.writeHead(405, { ...CORS_HEADERS, 'Content-Type': 'application/json' })
     res.end(JSON.stringify({ ok: false, error: 'Method not allowed' }))
+    return
+  }
+
+  // ── 0. 호출 출처 검증 (OPTIONS preflight 는 위에서 이미 통과) ──
+  const origin  = req.headers.origin  || ''
+  const referer = req.headers.referer || ''
+  const allowed = origin.startsWith('https://carender.kr') || referer.startsWith('https://carender.kr')
+  if (!allowed) {
+    res.writeHead(403, { ...CORS_HEADERS, 'Content-Type': 'application/json' })
+    res.end(JSON.stringify({ ok: false, error: 'forbidden' }))
     return
   }
 
